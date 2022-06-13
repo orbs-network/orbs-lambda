@@ -1,0 +1,38 @@
+{
+  "name": "orbs-lambda",
+  "version": "1.0.0",
+  "description": "",
+  "dependencies": {
+    "ethereum-multicall": "^2.10.0",
+    "bignumber.js": "^9.0.1",
+    "node-fetch": "^2.6.5",
+    "web3": "^1.5.2"
+  },
+  "devDependencies": {
+    "@types/mocha": "^9.0.0",
+    "dotenv": "^16.0.0",
+    "mocha": "^9.1.3",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4"
+  },
+  "scripts": {
+    "test": "mocha --exit test/**/*.spec.ts",
+    "build": "tsc --build",
+    "prerun:dev" : "npm run build",
+    "run:dev": "node ./example/xxx.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/orbs-network/orbs-lambda.git"
+  },
+  "mocha": {
+    "require": [
+      "chai",
+      "ts-node/register"
+    ],
+    "timeout": 20000
+  },
+  "author": "",
+  "license": "ISC",
+  "homepage": "https://github.com/orbs-network/orbs-lambda#readme"
+}
