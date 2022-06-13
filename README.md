@@ -1,16 +1,8 @@
 # Orbs Lambda
 
-### An open always-free notification protocol for DeFi on-chain events.
+### Orbs Lambda is an event driven, serverless and decentralized computing solution
 
-## Goals
-
-1. goal 1
-
-   > goal 1
-
-2. goal 2
-
-   > goal 2
+Write your cloud function in the industry standard language JavaScript, without any blockchain specific knowledge.
 
 &nbsp;
 
