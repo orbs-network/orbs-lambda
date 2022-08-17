@@ -12,10 +12,6 @@
     "dotenv": "^16.0.0"
   },
   "scripts": {
-    "test": "mocha --exit test/**/*.spec.ts",
-    "build": "tsc --build",
-    "prerun:dev": "npm run build",
-    "run:dev": "node ./example/xxx.js"
   },
   "repository": {
     "type": "git",

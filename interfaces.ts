@@ -12,7 +12,8 @@ export function onSchedule(
 export function onEvent(
     fn: (...args: any[]) => any,
     contractAddress: string,
-    eventName: string,
+    abi: any,
+    eventNames: string[],
     network: Network,
     config: { [key: string]: any }
 ) {}
@@ -42,6 +43,7 @@ type Event = {
         }
 }
 
+// Arguments available to the task function
 export interface ExecutionArgs {
     config: { [key: string]: any };
     // List of guardians addresses  TODO
@@ -52,6 +54,6 @@ export interface ExecutionArgs {
     fromBlock?: number;
     // the last block in the range to be scanned for potential triggers - only relevant for onBlocks
     toBlock?: number;
-    // array of events matching the criteria - only relevant for onEvent
-    events?: Event[];
+    // the emitted event, matching the criteria - only relevant for onEvent
+    event?: Event;
 }

@@ -35,7 +35,7 @@ You can assume send() will sign and send the tx for you.
 
 See [here](interfaces.ts) for more info.
 
-### [Example](./example/example.ts) - auto compounding for Harvest Finance.
+### [Example](examples/example.ts) - auto compounding for Harvest Finance.
 
 This task runs once a day and triggers doHardWork for a specific vault.
 
