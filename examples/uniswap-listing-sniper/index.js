@@ -1,7 +1,9 @@
 const {factoryConfig, executionConfig} = require('./config')
 
 async function snipe(web3, storage, config, event) {
-    if (event.returnValues.token0 === config.token0 && event.returnValues.token1 === config.token1) {
+    const token0 = web3.eth.abi.decodeParameter('address', event.topics[1]);
+    const token1 = web3.eth.abi.decodeParameter('address', event.topics[2]);
+    if (token0 === config.token0 && token1 === config.token1) {
         const routerContract = new web3.eth.Contract(config.routerAbi, config.routerAddress)
         await routerContract.methods.swapExactETHForTokens(
             config.amountOutMin,
