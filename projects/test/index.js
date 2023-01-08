@@ -16,5 +16,5 @@ const abi = [{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":
 module.exports.register = function (engine) {
     engine.onInterval(IntervalTask, {interval: "1h", network: 'goerli'})
     engine.onEvent(eventTask, {contractAddress: "0xea26b78255df2bbc31c1ebf60010d78670185bd0", abi, eventName: 'Swap', network: 'bsc'})
-    // engine.onCron(scheduledTask, {cron: "0 0 * * *", network: 'polygon'})
+    engine.onCron(scheduledTask, {cron: "0 0 * * *", network: 'polygon'})
 }
