@@ -1,7 +1,8 @@
 const child_process = require("child_process");
 const {expect} = require("chai");
 const {parseExpression} = require("cron-parser");
-const {utils} = require("web3")
+const {utils} = require("web3");
+const {join} = require('path');
 
 class Engine {
     onCron(fn, args) {
@@ -59,7 +60,7 @@ describe("Schema test", () => {
         for (const file of changedFiles) {
             if (/projects\/.*\/index.js/.test(file)) {
                 console.log(file)
-                const schema = require(file)
+                const schema = require(join(process.cwd(), file))
                 expect(schema).to.include.keys('register')
                 schema.register(engine);
             }

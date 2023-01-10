@@ -26,7 +26,7 @@ async function scheduledTask(args) {
 
 async function eventTask(args) {
     console.log('event1')
-    await new Promise(resolve => setTimeout(resolve, 10000));
+    await new Promise(resolve => setTimeout(resolve, 1000));
     console.log(args.event.event, args.event.transactionHash)
 }
 
