@@ -9,6 +9,7 @@ jobs:
       - checkout
       - node/install:
           node-version: '16.13.1'
+      - run: npm install --no-save tap-xunit
       - run: npm test
 
 workflows:
