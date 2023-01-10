@@ -61,7 +61,7 @@ describe("Schema test", () => {
         console.log(execSync("ls", {'cwd': process.cwd()}).toString())
         for (const file of changedFiles) {
             if (/projects\/.*\/index.js/.test(file)) {
-                const schema = require(join(process.cwd(), 'orbs-lambda', file))
+                const schema = require(join(process.cwd(), file))
                 expect(schema).to.include.keys('register')
                 schema.register(engine);
             }
