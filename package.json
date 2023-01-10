@@ -3,15 +3,26 @@
   "version": "1.0.0",
   "description": "",
   "dependencies": {
+    "@orbs-network/pos-analytics-lib": "^0.9.3",
+    "cron-parser": "^4.4.0",
     "ethereum-multicall": "^2.10.0",
     "bignumber.js": "^9.0.1",
     "node-fetch": "^2.6.5",
     "web3": "^1.5.2"
   },
   "devDependencies": {
-    "dotenv": "^16.0.0"
+    "dotenv": "^16.0.0",
+    "chai": "^4.3.7",
+    "mocha": "^10.2.0"
+  },
+  "mocha": {
+    "require": [
+      "chai"
+    ],
+    "timeout": 20000
   },
   "scripts": {
+    "test": "mocha ./.circleci"
   },
   "repository": {
     "type": "git",
