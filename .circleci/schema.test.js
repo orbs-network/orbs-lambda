@@ -57,9 +57,11 @@ describe("Schema test", () => {
         // schema.register(engine);
 
         let changedFiles = execSync('git diff-tree --no-commit-id --name-only -r HEAD').toString().trim().split('\n');
+        console.log(execSync("ls").toString())
+        console.log(execSync("ls", {'cwd': process.cwd()}).toString())
         for (const file of changedFiles) {
             if (/projects\/.*\/index.js/.test(file)) {
-                const schema = require(join('./', file))
+                const schema = require(join(process.cwd(), 'orbs-lambda', file))
                 expect(schema).to.include.keys('register')
                 schema.register(engine);
             }
