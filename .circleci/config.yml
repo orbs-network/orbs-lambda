@@ -1,0 +1,22 @@
+version: 2.1
+orbs:
+  node: circleci/node@4.9.0
+jobs:
+  test-schema:
+    machine:
+      image: ubuntu-2004:202010-01 # recommended linux image
+    steps:
+      - checkout
+      - node/install:
+          node-version: '16.13.1'
+      - run: npm test
+
+workflows:
+  check-pr:
+    jobs:
+      - test-schema:
+          filters:
+            branches:
+              only: /.*/
+            tags:
+              only: /v.*/
