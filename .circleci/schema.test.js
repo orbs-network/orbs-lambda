@@ -1,4 +1,4 @@
-const child_process = require("child_process");
+const {execSync} = require("child_process");
 const {expect} = require("chai");
 const {parseExpression} = require("cron-parser");
 const {utils} = require("web3");
@@ -56,10 +56,10 @@ describe("Schema test", () => {
         // expect(schema).to.include.keys('register')
         // schema.register(engine);
 
-        let changedFiles = child_process.execSync('git diff-tree --no-commit-id --name-only -r HEAD').toString().trim().split('\n');
+        let changedFiles = execSync('git diff-tree --no-commit-id --name-only -r HEAD').toString().trim().split('\n');
         for (const file of changedFiles) {
             if (/projects\/.*\/index.js/.test(file)) {
-                console.log(file)
+                console.log(execSync("ls").toString())
                 const schema = require(join(process.cwd(), file))
                 expect(schema).to.include.keys('register')
                 schema.register(engine);
