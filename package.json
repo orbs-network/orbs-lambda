@@ -22,7 +22,7 @@
     "timeout": 20000
   },
   "scripts": {
-    "test": "mocha ./.circleci"
+    "test": "mocha ./.github"
   },
   "repository": {
     "type": "git",

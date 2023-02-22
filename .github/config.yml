@@ -1,0 +1,21 @@
+name: "orbs-lambda"
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test-schema:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Run npm install
+        run: npm install
+      - name: Run tests
+        run: npm test
