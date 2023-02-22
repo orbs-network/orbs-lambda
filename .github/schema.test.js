@@ -58,6 +58,7 @@ const engine = new Engine();
 describe("Schema test", () => {
     it("should successfully run handlers", () => {
         let changedFiles = execSync('git diff-tree --no-commit-id --name-only -r HEAD').toString().trim().split('\n');
+        console.log(changedFiles)
         for (const file of changedFiles) {
             if (/projects\/.*\/index.js/.test(file)) {
                 console.log(file)
