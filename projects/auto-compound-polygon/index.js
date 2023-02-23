@@ -59,5 +59,5 @@ async function compoundPolygon(args) {
 //////////////////
 
 module.exports.register = function (engine) {
-    engine.onInterval(compoundPolygon, {interval: "0 0 * * 1", network: 'polygon'})
+    engine.onCron(compoundPolygon, {cron: "0 0 * * 1", network: 'polygon'})
 }

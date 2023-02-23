@@ -1,6 +1,7 @@
 name: "orbs-lambda"
 
 on:
+  push:
   pull_request:
     branches:
       - master
