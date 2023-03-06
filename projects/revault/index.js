@@ -8,7 +8,8 @@ async function updateTvls(args) {
 async function updatePools(args) {
     const poolsContract = new args.web3.eth.Contract(poolsConfig.abi, poolsConfig.contractAddress);
     for (const id of poolsConfig.poolIds) {
-        await poolsContract.methods[poolsConfig.method](id).send()
+        await poolsContract.methods[poolsConfig.method](id).send();
+        await new Promise(resolve => setTimeout(resolve, 5000));
     }
 }
 
