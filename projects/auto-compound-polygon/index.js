@@ -1,4 +1,4 @@
-const {getGuardian, getGuardians} = require("@orbs-network/pos-analytics-lib");
+const {getGuardian, getGuardians, getWeb3Polygon} = require("@orbs-network/pos-analytics-lib");
 const BigNumber = require('bignumber.js');
 const {compoundPolygonConfig} = require("./config.js");
 
@@ -13,7 +13,8 @@ async function getAllDelegators(web3) {
     const allGuardians = await getGuardians(compoundPolygonConfig.nodeEndpoints)
     for (const guardian of allGuardians) {
         console.log(`Working on guardian ${guardian.address}`)
-        const g_info = await getGuardian(guardian.address, web3);
+        const web3Polygon = await getWeb3Polygon(web3._provider.url.replace("wss", "https"));
+        const g_info = await getGuardian(guardian.address, web3Polygon);
         stakers.push(g_info.address);
         for (const d of g_info.delegators) {
             if (d.stake > compoundPolygonConfig.stakeThreshold) stakers.push(d.address);

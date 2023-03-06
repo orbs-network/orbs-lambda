@@ -1,4 +1,4 @@
-const stakingRewardsAbi = require('./abi.js')
+const {stakingRewardsAbi} = require('./abi.js')
 
 module.exports.compoundPolygonConfig = {
     stakingRewardsAbi,
