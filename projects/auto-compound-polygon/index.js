@@ -1,11 +1,5 @@
 const {getGuardian, getGuardians, getWeb3Polygon} = require("@orbs-network/pos-analytics-lib");
-const BigNumber = require('bignumber.js');
 const {compoundPolygonConfig} = require("./config.js");
-
-
-function bigToNumber(n) {
-    return n.dividedBy("1e18").toNumber();
-}
 
 async function getAllDelegators(web3) {
     console.log("Getting a list of stakers...")
@@ -28,12 +22,12 @@ async function claimBatch(web3, stakersList) {
     console.log('Claiming...');
     const stakingRewardContract = new web3.eth.Contract(compoundPolygonConfig.stakingRewardsAbi, compoundPolygonConfig.stakingRewardsAddress);
     let numberOfWallets = 0;
-    let totalCompounded = 0;
+    let retry = 0;
     const from = await web3.eth.getAccounts(); // web3 object comes with account already injected
-    for (const staker of stakersList) {
+    const stakersListLen = stakersList.length;
+    while (stakersList.length) {
+        const staker = stakersList.shift();
         try {
-            const rewardBalance = await stakingRewardContract.methods.getDelegatorStakingRewardsData(staker).call();
-            let balance = bigToNumber(new BigNumber(rewardBalance.balance));
             const receipt = await stakingRewardContract.methods.claimStakingRewards(staker).send({
                 from: from[0],
                 gas: compoundPolygonConfig.gasLimit,
@@ -41,15 +35,24 @@ async function claimBatch(web3, stakersList) {
                 maxFeePerGas: compoundPolygonConfig.maxFeePerGas
             });
             numberOfWallets += 1;
-            totalCompounded += balance;
             // console.log(receipt.transactionHash);
             console.log(staker);
+            retry = 0;
         } catch (e) {
-            console.error(`Error while claiming for ${staker}: ${e}`);
+            if (retry < 3) {
+                console.error(`Retrying ${staker}: ${e}`);
+                await new Promise(resolve => setTimeout(resolve, 1250));
+                stakersList.unshift(staker)
+                retry++;
+            }
+            else {
+                console.error(`Error while claiming for ${staker}: ${e}`);
+                retry = 0;
+            }
         }
     }
-    console.log(`Successfully claimed for ${numberOfWallets}/${stakersList.length} accounts`)
-}
+    console.log(`Successfully claimed for ${numberOfWallets}/${stakersListLen} accounts`)
+ }
 
 
 async function compoundPolygon(args) {
