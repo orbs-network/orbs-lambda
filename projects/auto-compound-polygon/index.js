@@ -1,5 +1,22 @@
 const {getGuardian, getGuardians, getWeb3Polygon} = require("@orbs-network/pos-analytics-lib");
 const {compoundPolygonConfig} = require("./config.js");
+import {bigToNumber} from "@orbs-network/pos-analytics-lib/dist/helpers";
+import BigNumber from 'bignumber.js';
+
+async function CalcAndSendMetrics(web3, numberOfWallets, totalCompounded) {
+    // get staking balance
+    const minABI = [{"constant":true, "inputs":[{"name":"_owner","type":"address"}], "name":"balanceOf", "outputs":[{"name":"balance","type":"uint256"}], "type":"function"}, {"constant":true, "inputs":[], "name":"decimals", "outputs":[{"name":"","type":"uint8"}], "type":"function"}];
+    const tokenContract = new web3.eth.Contract(minABI, compoundPolygonConfig.orbsErc20)
+    let stakingBalance = await tokenContract.methods.balanceOf(compoundPolygonConfig.stakingContract).call();
+    stakingBalance = bigToNumber(new BigNumber(stakingBalance));
+
+    const json = {"numberOfWallets": numberOfWallets, "totalCompounded": totalCompounded, "stakingBalance": stakingBalance}
+    const response = await fetch(compoundPolygonConfig.esEndpoint, {
+        method: 'post',
+        body: JSON.stringify(json),
+        headers: {'Content-Type': 'application/json'}
+    });
+}
 
 async function getAllDelegators(web3) {
     console.log("Getting a list of stakers...")
@@ -19,22 +36,24 @@ async function getAllDelegators(web3) {
 }
 
 async function claimBatch(web3, stakersList) {
+    let numberOfWallets = 0;
+    let totalCompounded = 0;
+    let retry = 0;
     console.log('Claiming...');
     const stakingRewardContract = new web3.eth.Contract(compoundPolygonConfig.stakingRewardsAbi, compoundPolygonConfig.stakingRewardsAddress);
-    let numberOfWallets = 0;
-    let retry = 0;
-    const from = await web3.eth.getAccounts(); // web3 object comes with account already injected
     const stakersListLen = stakersList.length;
     while (stakersList.length) {
         const staker = stakersList.shift();
         try {
+            const rewardBalance = await stakingRewardContract.methods.getDelegatorStakingRewardsData(staker).call();
+            let balance = bigToNumber(new BigNumber(rewardBalance.balance));
             const receipt = await stakingRewardContract.methods.claimStakingRewards(staker).send({
-                from: from[0],
                 gas: compoundPolygonConfig.gasLimit,
                 maxPriorityFeePerGas: compoundPolygonConfig.maxPriorityFeePerGas,
                 maxFeePerGas: compoundPolygonConfig.maxFeePerGas
             });
             numberOfWallets += 1;
+            totalCompounded += balance;
             // console.log(receipt.transactionHash);
             console.log(staker);
             retry = 0;
@@ -51,13 +70,16 @@ async function claimBatch(web3, stakersList) {
             }
         }
     }
-    console.log(`Successfully claimed for ${numberOfWallets}/${stakersListLen} accounts`)
+    console.log(`Successfully claimed for ${numberOfWallets}/${stakersListLen} accounts`);
+    return {numberOfWallets, totalCompounded};
  }
 
 
 async function compoundPolygon(args) {
     const stakers = await getAllDelegators(args.web3);
-    await claimBatch(args.web3, stakers);
+    const {numberOfWallets, totalCompounded} = await claimBatch(args.web3, stakers);
+    await CalcAndSendMetrics(args.web3, numberOfWallets, totalCompounded)
+
 }
 
 //////////////////
