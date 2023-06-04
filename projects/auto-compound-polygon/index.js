@@ -1,7 +1,7 @@
 const {getGuardian, getGuardians, getWeb3Polygon} = require("@orbs-network/pos-analytics-lib");
 const {compoundPolygonConfig} = require("./config.js");
-import {bigToNumber} from "@orbs-network/pos-analytics-lib/dist/helpers";
-import BigNumber from 'bignumber.js';
+const {bigToNumber} = require("@orbs-network/pos-analytics-lib/dist/helpers");
+const BigNumber = require('bignumber.js');
 
 async function CalcAndSendMetrics(web3, numberOfWallets, totalCompounded) {
     // get staking balance
@@ -72,7 +72,7 @@ async function claimBatch(web3, stakersList) {
     }
     console.log(`Successfully claimed for ${numberOfWallets}/${stakersListLen} accounts`);
     return {numberOfWallets, totalCompounded};
- }
+}
 
 
 async function compoundPolygon(args) {
