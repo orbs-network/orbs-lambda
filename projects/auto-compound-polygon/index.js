@@ -2,6 +2,12 @@ const {getGuardian, getGuardians, getWeb3Polygon} = require("@orbs-network/pos-a
 const {compoundPolygonConfig} = require("./config.js");
 const {bigToNumber} = require("@orbs-network/pos-analytics-lib/dist/helpers");
 const BigNumber = require('bignumber.js');
+const EthereumMulticall = require('@orbs-network/ethereum-multicall');
+
+const BLOCK_GAS_LIMIT = 30e6;
+const BLOCK_UTILIZATION = 0.25;
+const BASE_GAS = 300000;
+const ADDITIONAL_WALLET = 90000;
 
 async function CalcAndSendMetrics(web3, numberOfWallets, totalCompounded) {
     // get staking balance
@@ -38,37 +44,45 @@ async function getAllDelegators(web3) {
 async function claimBatch(web3, stakersList) {
     let numberOfWallets = 0;
     let totalCompounded = 0;
-    let retry = 0;
     console.log('Claiming...');
+    const multicall = new EthereumMulticall.Multicall({web3Instance: web3});
     const stakingRewardContract = new web3.eth.Contract(compoundPolygonConfig.stakingRewardsAbi, compoundPolygonConfig.stakingRewardsAddress);
     const stakersListLen = stakersList.length;
-    while (stakersList.length) {
-        const staker = stakersList.shift();
-        try {
+    let calls;
+
+    const chunksNum = Math.ceil((BASE_GAS+ADDITIONAL_WALLET*stakersListLen) / (BLOCK_GAS_LIMIT*BLOCK_UTILIZATION));
+    const chunkSize = Math.floor(stakersListLen/chunksNum)
+    console.log(`Running in ${chunksNum} chunks of ${chunkSize}`);
+    for (let i = 0, j=1; i < stakersList.length; i += chunkSize, j += 1) {
+        calls = [];
+        const chunk = stakersList.slice(i, i + chunkSize);
+        while (chunk.length) {
+            const staker = chunk.shift();
             const rewardBalance = await stakingRewardContract.methods.getDelegatorStakingRewardsData(staker).call();
             let balance = bigToNumber(new BigNumber(rewardBalance.balance));
-            const receipt = await stakingRewardContract.methods.claimStakingRewards(staker).send({
+            numberOfWallets += 1;
+            totalCompounded += balance;
+
+            calls.push({
+                reference: 'autoCompound',
+                methodName: 'claimStakingRewards',
+                methodParameters: [staker]
+            })
+        }
+        const contractCallContext = [{
+            reference: 'autoCompound',
+            contractAddress: compoundPolygonConfig.stakingRewardsAddress,
+            abi: compoundPolygonConfig.stakingRewardsAbi,
+            calls
+        }];
+        await multicall.send(contractCallContext, {
+                from: web3.eth.accounts.wallet[0].address,
                 gas: compoundPolygonConfig.gasLimit,
                 maxPriorityFeePerGas: compoundPolygonConfig.maxPriorityFeePerGas,
                 maxFeePerGas: compoundPolygonConfig.maxFeePerGas
-            });
-            numberOfWallets += 1;
-            totalCompounded += balance;
-            // console.log(receipt.transactionHash);
-            console.log(staker);
-            retry = 0;
-        } catch (e) {
-            if (retry < 3) {
-                console.error(`Retrying ${staker}: ${e}`);
-                await new Promise(resolve => setTimeout(resolve, 1250));
-                stakersList.unshift(staker)
-                retry++;
             }
-            else {
-                console.error(`Error while claiming for ${staker}: ${e}`);
-                retry = 0;
-            }
-        }
+        )
+        console.log(`Finished chunk ${j}/${chunksNum}`);
     }
     console.log(`Successfully claimed for ${numberOfWallets}/${stakersListLen} accounts`);
     return {numberOfWallets, totalCompounded};

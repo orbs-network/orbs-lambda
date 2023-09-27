@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "dependencies": {
+    "@orbs-network/ethereum-multicall": "2.2.0",
     "@orbs-network/pos-analytics-lib": "^0.9.3",
     "cron-parser": "^4.4.0",
     "ethereum-multicall": "^2.10.0",
