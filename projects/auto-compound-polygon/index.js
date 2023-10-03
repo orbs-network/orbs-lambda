@@ -1,13 +1,8 @@
-const {getGuardian, getGuardians, getWeb3Polygon} = require("@orbs-network/pos-analytics-lib");
+const {getDelegators, getGuardians, getWeb3Polygon} = require("@orbs-network/pos-analytics-lib");
 const {compoundPolygonConfig} = require("./config.js");
 const {bigToNumber} = require("@orbs-network/pos-analytics-lib/dist/helpers");
 const BigNumber = require('bignumber.js');
 const EthereumMulticall = require('@orbs-network/ethereum-multicall');
-
-const BLOCK_GAS_LIMIT = 30e6;
-const BLOCK_UTILIZATION = 0.25;
-const BASE_GAS = 300000;
-const ADDITIONAL_WALLET = 90000;
 
 async function CalcAndSendMetrics(web3, numberOfWallets, totalCompounded) {
     // get staking balance
@@ -31,9 +26,9 @@ async function getAllDelegators(web3) {
     for (const guardian of allGuardians) {
         console.log(`Working on guardian ${guardian.address}`)
         const web3Polygon = await getWeb3Polygon(web3._provider.url.replace("wss", "https"));
-        const g_info = await getGuardian(guardian.address, web3Polygon);
-        stakers.push(g_info.address);
-        for (const d of g_info.delegators) {
+        const g_info = await getDelegators(guardian.address, web3Polygon);
+        stakers.push(guardian.address);
+        for (const d of g_info) {
             if (d.stake > compoundPolygonConfig.stakeThreshold) stakers.push(d.address);
         }
     }
@@ -50,7 +45,7 @@ async function claimBatch(web3, stakersList) {
     const stakersListLen = stakersList.length;
     let calls;
 
-    const chunksNum = Math.ceil((BASE_GAS+ADDITIONAL_WALLET*stakersListLen) / (BLOCK_GAS_LIMIT*BLOCK_UTILIZATION));
+    const chunksNum = Math.ceil((compoundPolygonConfig.baseGas+compoundPolygonConfig.additionalWallet*stakersListLen) / (compoundPolygonConfig.blockGasLimit*compoundPolygonConfig.blockUtilization));
     const chunkSize = Math.floor(stakersListLen/chunksNum)
     console.log(`Running in ${chunksNum} chunks of ${chunkSize}`);
     for (let i = 0, j=1; i < stakersList.length; i += chunkSize, j += 1) {
@@ -77,7 +72,7 @@ async function claimBatch(web3, stakersList) {
         }];
         await multicall.send(contractCallContext, {
                 from: web3.eth.accounts.wallet[0].address,
-                gas: compoundPolygonConfig.gasLimit,
+                gas: compoundPolygonConfig.blockGasLimit * compoundPolygonConfig.blockUtilization,
                 maxPriorityFeePerGas: compoundPolygonConfig.maxPriorityFeePerGas,
                 maxFeePerGas: compoundPolygonConfig.maxFeePerGas
             }

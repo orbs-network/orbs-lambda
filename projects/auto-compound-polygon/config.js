@@ -3,7 +3,10 @@ const {stakingRewardsAbi} = require('./abi.js')
 module.exports.compoundPolygonConfig = {
     stakingRewardsAbi,
     stakingRewardsAddress: "0x295d1982b1b20Cc0c02A0Da7285826c69EF71Fac",
-    gasLimit: 500000,
+    blockGasLimit: 30e6,
+    blockUtilization: 0.25,
+    baseGas: 300000,
+    additionalWallet: 100000,
     maxPriorityFeePerGas: 30 * 1e9,
     maxFeePerGas: 500 * 1e9,
     stakeThreshold: 1,
