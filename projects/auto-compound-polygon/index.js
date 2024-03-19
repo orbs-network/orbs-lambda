@@ -45,7 +45,7 @@ async function claimBatch(web3, stakersList) {
     const stakersListLen = stakersList.length;
     let calls;
 
-    const chunksNum = Math.ceil((compoundPolygonConfig.baseGas + compoundPolygonConfig.additionalWallet * stakersListLen) / (compoundPolygonConfig.blockGasLimit * compoundPolygonConfig.blockUtilization));
+    const chunksNum = Math.ceil((compoundPolygonConfig.baseGas + compoundPolygonConfig.additionalWallet * stakersListLen) / (compoundPolygonConfig.blockGasLimit * compoundPolygonConfig.blockUtilization/2));
     const chunkSize = Math.floor(stakersListLen / chunksNum)
     console.log(`Running in ${chunksNum} chunks of ${chunkSize}`);
     for (let i = 0, j = 1; i < stakersList.length; i += chunkSize, j += 1) {
