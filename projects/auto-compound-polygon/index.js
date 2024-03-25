@@ -78,6 +78,7 @@ async function claimBatch(web3, stakersList) {
         }
         )
         console.log(`Finished chunk ${j}/${chunksNum}`);
+        await new Promise(resolve => setTimeout(resolve, 2 * 60 * 1000));
     }
     console.log(`Successfully claimed for ${numberOfWallets}/${stakersListLen} accounts`);
     return { numberOfWallets, totalCompounded };
@@ -86,6 +87,7 @@ async function claimBatch(web3, stakersList) {
 
 async function compoundPolygon(args) {
     const stakers = await getAllDelegators(args.web3);
+    await new Promise(resolve => setTimeout(resolve, 60 * 1000));
     const { numberOfWallets, totalCompounded } = await claimBatch(args.web3, stakers);
     await CalcAndSendMetrics(args.web3, numberOfWallets, totalCompounded)
 
