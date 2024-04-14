@@ -31,6 +31,7 @@ async function getAllDelegators(web3) {
         for (const d of g_info) {
             if (d.stake > compoundPolygonConfig.stakeThreshold) stakers.push(d.address);
         }
+        await new Promise(resolve => setTimeout(resolve, 60 * 1000));
     }
     console.log(`Found ${stakers.length} stakers`)
     return stakers;
