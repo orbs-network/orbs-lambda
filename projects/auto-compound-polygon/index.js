@@ -1,4 +1,4 @@
-const { getDelegators, getGuardians } = require("@orbs-network/pos-analytics-lib");
+const { getDelegators, getGuardians, getWeb3Polygon} = require("@orbs-network/pos-analytics-lib");
 const { compoundPolygonConfig } = require("./config.js");
 const { bigToNumber } = require("@orbs-network/pos-analytics-lib/dist/helpers");
 const BigNumber = require('bignumber.js');
@@ -22,15 +22,16 @@ async function CalcAndSendMetrics(web3, numberOfWallets, totalCompounded) {
 async function getAllDelegators(web3) {
     console.log("Getting a list of stakers...")
     let stakers = [];
+    const web3Polygon = await getWeb3Polygon(web3._provider.host);
     const allGuardians = await getGuardians(compoundPolygonConfig.nodeEndpoints)
     for (const guardian of allGuardians) {
         console.log(`Working on guardian ${guardian.address}`)
-        const g_info = await getDelegators(guardian.address, web3);
+        const g_info = await getDelegators(guardian.address, web3Polygon);
         stakers.push(guardian.address);
         for (const d of g_info) {
             if (d.stake > compoundPolygonConfig.stakeThreshold) stakers.push(d.address);
         }
-        await new Promise(resolve => setTimeout(resolve, 60 * 1000));
+        await new Promise(resolve => setTimeout(resolve, 10 * 1000));
     }
     console.log(`Found ${stakers.length} stakers`)
     return stakers;
