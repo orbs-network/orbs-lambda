@@ -11,6 +11,10 @@ async function fetchStatus() {
 
 async function getCurrentCommittee(args) {
   const data = await fetchStatus()
+  if (data.Error) {
+    return { error: data.Error }
+  }
+
   const committee = data.Payload?.CurrentCommittee || []
   const topology = data.Payload?.CurrentTopology || []
 
@@ -98,28 +102,42 @@ async function getCandidates(args) {
   }
 }
 
-async function getSignedCommittee(args) {
-  console.log("getSignedCommittee args:", args)
-  // GET request http://signer
-  const response = await fetch("http://signer/", { method: "GET" })
-  // handle error
+async function ethSign(message, serviceUrl) {
+  // Convert string to Buffer
+  const messageBuffer = Buffer.from(message, 'utf8');
+
+  // Build the request body using NodeSignInputBuilder
+  const body = new NodeSignInputBuilder(messageBuffer).build();
+
+  // Make the request to /eth-sign endpoint
+  const response = await fetch(`${serviceUrl}/eth-sign`, {
+    method: "POST",
+    body: body,
+    headers: {
+      "Content-Type": "application/membuffers"
+    }
+  });
+
   if (!response.ok) {
-    return `HTTP error! status: ${response.status}`;
+    throw new Error(`Signing failed: ${response.status} ${response.statusText}`);
   }
-  const data = await response.json()
-  console.log("rpcTask data:", data)
-  //console.log("rpcTask chanId", await args.web3.eth.getChainId())
-  return data
-  //return "rpcTask result"
+
+  // Read the signature from the response
+  const responseBuffer = await response.buffer();
+  const signature = new NodeSignOutputReader(responseBuffer).getSignature();
+
+  return signature;
 }
 
-module.exports.register = function (engine) {
-  // get current file's directory - but just the last bit of the path  (so we can use it as the projectName)
-  const path = require('path')
-  const projName = path.basename(path.dirname(__filename))
-  console.log("register project Name: ", projName)
-  // projectName has to be the same as the folder name
-
-  engine.onRpc(getCurrentCommittee, { projectName: projName, taskName: "getCurrentCommittee" });
-  engine.onRpc(getSignedCommittee, { projectName: projName, taskName: "getSignedCommitteeFn" });
+async function getSignedCommittee(args) {
+  console.log("getSignedCommittee args:", args)
+  const committee = await getCurrentCommittee(args);
+  if (committee.error) {
+    return { error: committee.error }
+  }
+  const formated = committee.members.map(member => member.nodeAddress).join(',');
+  console.log("formated: ", formated);
+  signature = await ethSign(formated, "http://nginx/services/ethereum-reader")
+  console.log("getSignedCommittee signature: ", signature);
+  return { committee: formated, signature }
 }
