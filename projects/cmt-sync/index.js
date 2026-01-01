@@ -1,5 +1,45 @@
 const fetch = require('node-fetch');
 
+// Membuffers helper classes for NodeSign serialization
+class NodeSignInputBuilder {
+  constructor(messageBuffer) {
+    this.messageBuffer = messageBuffer;
+  }
+
+  build() {
+    // Membuffers format: length-prefixed bytes
+    // First 4 bytes: length of the message (uint32, little-endian)
+    const length = Buffer.allocUnsafe(4);
+    length.writeUInt32LE(this.messageBuffer.length, 0);
+
+    // Combine length prefix + message
+    return Buffer.concat([length, this.messageBuffer]);
+  }
+}
+
+class NodeSignOutputReader {
+  constructor(buffer) {
+    this.buffer = buffer;
+  }
+
+  getSignature() {
+    // Membuffers format: length-prefixed bytes
+    // First 4 bytes: length of the signature (uint32, little-endian)
+    if (this.buffer.length < 4) {
+      throw new Error('Invalid membuffers response: buffer too short');
+    }
+
+    const signatureLength = this.buffer.readUInt32LE(0);
+
+    if (this.buffer.length < 4 + signatureLength) {
+      throw new Error(`Invalid membuffers response: expected ${signatureLength} bytes, got ${this.buffer.length - 4}`);
+    }
+
+    // Extract signature (skip length prefix)
+    return this.buffer.slice(4, 4 + signatureLength);
+  }
+}
+
 async function fetchStatus() {
   const response = await fetch("http://nginx/services/ethereum-reader/status", { method: "GET" })
   if (!response.ok) {
@@ -108,6 +148,7 @@ async function ethSign(message, serviceUrl) {
 
   // Build the request body using NodeSignInputBuilder
   const body = new NodeSignInputBuilder(messageBuffer).build();
+  console.log("ethSign body: ", body);
 
   // Make the request to /eth-sign endpoint
   const response = await fetch(`${serviceUrl}/eth-sign`, {
@@ -135,9 +176,9 @@ async function getSignedCommittee(args) {
   if (committee.error) {
     return { error: committee.error }
   }
-  const formated = committee.members.map(member => member.nodeAddress).join(',');
+  const formated = committee.members.map(member => member.orbsAddress).join(',');
   console.log("formated: ", formated);
-  signature = await ethSign(formated, "http://nginx/services/ethereum-reader")
+  const signature = await ethSign(formated, "http://nginx/services/ethereum-reader")
   console.log("getSignedCommittee signature: ", signature);
   return { committee: formated, signature }
 }
