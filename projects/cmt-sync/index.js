@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 
 async function fetchStatus() {
-  const response = await fetch("http://ethereum-reader/status", { method: "GET" })
+  const response = await fetch("http://nginx/services/ethereum-reader/status", { method: "GET" })
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
