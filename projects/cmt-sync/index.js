@@ -172,15 +172,40 @@ async function ethSign(message, serviceUrl) {
 
 async function getSignedCommittee(args) {
   console.log("getSignedCommittee args:", args)
-  const committee = await getCurrentCommittee(args);
-  if (committee.error) {
-    return { error: committee.error }
+  try {
+    const committee = await getCurrentCommittee(args);
+    if (committee.error) {
+      return { committee: null, signature: null, error: committee.error }
+    }
+
+    // Create array of addresses with 0x prefix for return value
+    const committeeAddresses = committee.members
+      .map(member => member.orbsAddress)
+      .filter(addr => addr) // Filter out null addresses
+      .map(addr => addr.startsWith('0x') ? addr : `0x${addr}`);
+
+    // Use comma-separated string (without 0x prefix) for signing (maintains compatibility)
+    const formated = committee.members.map(member => member.orbsAddress).join(',');
+    console.log("formated: ", formated);
+
+    const signatureBuffer = await ethSign(formated, "http://signer")
+    console.log("getSignedCommittee signature: ", signatureBuffer);
+
+    // Convert signature Buffer to hex string
+    const signatureHex = `0x${signatureBuffer.toString('hex')}`;
+
+    return {
+      committee: committeeAddresses,
+      signature: signatureHex,
+      error: null
+    }
+  } catch (error) {
+    return {
+      committee: null,
+      signature: null,
+      error: error.message || String(error)
+    }
   }
-  const formated = committee.members.map(member => member.orbsAddress).join(',');
-  console.log("formated: ", formated);
-  const signature = await ethSign(formated, "http://signer")
-  console.log("getSignedCommittee signature: ", signature);
-  return { committee: formated, signature }
 }
 
 
