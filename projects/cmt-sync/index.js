@@ -114,8 +114,8 @@ async function getSignedCommittee(args) {
 }
 
 module.exports.register = function (engine) {
-  // get current directory - but just the last bit of the path  (so we can use it as the projectName)
-  const projName = process.cwd().split('/').pop()
+  // get current file's directory - but just the last bit of the path  (so we can use it as the projectName)
+  const projName = __filename.split('/').pop().split('.')[0]
   console.log("currentDirectory:", projName)
   // projectName has to be the same as the folder name
 
