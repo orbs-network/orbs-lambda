@@ -178,7 +178,7 @@ async function getSignedCommittee(args) {
   }
   const formated = committee.members.map(member => member.orbsAddress).join(',');
   console.log("formated: ", formated);
-  const signature = await ethSign(formated, "http://nginx/services/ethereum-reader")
+  const signature = await ethSign(formated, "http://signer")
   console.log("getSignedCommittee signature: ", signature);
   return { committee: formated, signature }
 }
