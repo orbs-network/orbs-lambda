@@ -150,5 +150,5 @@ module.exports.register = function (engine) {
   console.log("register project Name: ", projName)
   // projectName has to be the same as the folder name
   engine.onRpc(getCurrentCommittee, { projectName: projName, taskName: "getCurrentCommittee" });
-  engine.onRpc(getSignedCommittee, { projectName: projName, taskName: "getSignedCommittee " });
+  engine.onRpc(getSignedCommittee, { projectName: projName, taskName: "getSignedCommittee" });
 }
