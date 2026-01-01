@@ -18,17 +18,17 @@ const abi2 = [{ "anonymous": false, "inputs": [{ "indexed": true, "internalType"
 
 async function rpcTaskFn(args) {
   console.log("rpcTask args", args)
-  // // GET request http://signer
-  // const response = await fetch("http://signer/", { method: "GET" })
-  // // handle error
-  // if (!response.ok) {
-  //     return `HTTP error! status: ${response.status}`;
-  // }
-  // const data = await response.json()
-  // console.log("rpcTask data:", data)
-  // //console.log("rpcTask chanId", await args.web3.eth.getChainId())
-  // return data
-  return "rpcTask result"
+  // GET request http://signer
+  const response = await fetch("http://signer/", { method: "GET" })
+  // handle error
+  if (!response.ok) {
+    return `HTTP error! status: ${response.status}`;
+  }
+  const data = await response.json()
+  console.log("rpcTask data:", data)
+  //console.log("rpcTask chanId", await args.web3.eth.getChainId())
+  return data
+  //return "rpcTask result"
 }
 
 module.exports.register = function (engine) {
