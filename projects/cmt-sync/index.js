@@ -217,7 +217,7 @@ async function getSignedCommittee(args) {
 
 
 async function hello(args) {
-  console.log("hello args: ", args)
+  console.log("hello queryParams args: ", args.queryParams)
   return { message: "Hello, world!" }
 }
 
