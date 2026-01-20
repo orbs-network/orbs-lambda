@@ -216,6 +216,11 @@ async function getSignedCommittee(args) {
 }
 
 
+async function hello(args) {
+  console.log("hello args: ", args)
+  return { message: "Hello, world!" }
+}
+
 module.exports.register = function (engine) {
   // get current file's directory - but just the last bit of the path  (so we can use it as the projectName)
   const path = require('path')
@@ -224,4 +229,5 @@ module.exports.register = function (engine) {
   // projectName has to be the same as the folder name
   engine.onRpc(getCurrentCommittee, { projectName: projName, taskName: "getCurrentCommittee" });
   engine.onRpc(getSignedCommittee, { projectName: projName, taskName: "getSignedCommittee" });
+  engine.onRpc(hello, { projectName: projName, taskName: "hello" });
 }
