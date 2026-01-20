@@ -1,4 +1,8 @@
 const fetch = require('node-fetch');
+const Web3 = require('web3');
+const web3 = new Web3();
+const { hash } = require('./hash');
+console.log('after imports')
 
 // Membuffers helper classes for NodeSign serialization
 class NodeSignInputBuilder {
@@ -22,22 +26,22 @@ class NodeSignOutputReader {
     this.buffer = buffer;
   }
 
-  getSignature() {
-    // Membuffers format: length-prefixed bytes
-    // First 4 bytes: length of the signature (uint32, little-endian)
-    if (this.buffer.length < 4) {
-      throw new Error('Invalid membuffers response: buffer too short');
-    }
+  //   getSignature() {
+  //     // Membuffers format: length-prefixed bytes
+  //     // First 4 bytes: length of the signature (uint32, little-endian)
+  //     if (this.buffer.length < 4) {
+  //       throw new Error('Invalid membuffers response: buffer too short');
+  //     }
 
-    const signatureLength = this.buffer.readUInt32LE(0);
+  //     const signatureLength = this.buffer.readUInt32LE(0);
 
-    if (this.buffer.length < 4 + signatureLength) {
-      throw new Error(`Invalid membuffers response: expected ${signatureLength} bytes, got ${this.buffer.length - 4}`);
-    }
+  //     if (this.buffer.length < 4 + signatureLength) {
+  //       throw new Error(`Invalid membuffers response: expected ${signatureLength} bytes, got ${this.buffer.length - 4}`);
+  //     }
 
-    // Extract signature (skip length prefix)
-    return this.buffer.slice(4, 4 + signatureLength);
-  }
+  //     // Extract signature (skip length prefix)
+  //     return this.buffer.slice(4, 4 + signatureLength);
+  //   }
 }
 
 async function fetchStatus() {
@@ -144,10 +148,11 @@ async function getCandidates(args) {
 
 async function ethSign(message, serviceUrl) {
   // Convert string to Buffer
-  const messageBuffer = Buffer.from(message, 'utf8');
+  //const messageBuffer = Buffer.from(message, 'utf8');
 
   // Build the request body using NodeSignInputBuilder
-  const body = new NodeSignInputBuilder(messageBuffer).build();
+  //const body = new NodeSignInputBuilder(messageBuffer).build();
+  const body = message;
   console.log("ethSign body: ", body);
 
   // Make the request to /eth-sign endpoint
@@ -164,11 +169,11 @@ async function ethSign(message, serviceUrl) {
   }
 
   // Read the signature from the response
-  const responseBuffer = await response.buffer();
-  const signature = new NodeSignOutputReader(responseBuffer).getSignature();
-
-  return signature;
+  return await response.text();
+  //const signature = new NodeSignOutputReader(responseBuffer)//.getSignature();
+  //return signature;
 }
+
 
 async function getSignedCommittee(args) {
   console.log("getSignedCommittee args:", args)
@@ -178,25 +183,27 @@ async function getSignedCommittee(args) {
       return { committee: null, signature: null, error: committee.error }
     }
 
+    const nonce = args.get('nonce')
+    console.log("nonce: ", nonce);
+
     // Create array of addresses with 0x prefix for return value
     const committeeAddresses = committee.members
       .map(member => member.orbsAddress)
       .filter(addr => addr) // Filter out null addresses
       .map(addr => addr.startsWith('0x') ? addr : `0x${addr}`);
 
-    // Use comma-separated string (without 0x prefix) for signing (maintains compatibility)
-    const formated = committee.members.map(member => member.orbsAddress).join(',');
-    console.log("formated: ", formated);
 
-    const signatureBuffer = await ethSign(formated, "http://signer")
-    console.log("getSignedCommittee signature: ", signatureBuffer);
+    // create EIP-712 compatible hash
+    const committeeHash = hash(nonce, committeeAddresses, [], web3);
+    console.log("getSignedCommittee hash: ", committeeHash);
 
-    // Convert signature Buffer to hex string
-    const signatureHex = `0x${signatureBuffer.toString('hex')}`;
+    const sig = await ethSign(committeeHash, "http://signer")
+    console.log("getSignedCommittee signature: ", sig);
+
 
     return {
       committee: committeeAddresses,
-      signature: signatureHex,
+      signature: sig,
       error: null
     }
   } catch (error) {
