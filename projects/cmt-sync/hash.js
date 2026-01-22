@@ -77,7 +77,9 @@ function hashCommittee(newCommittee, web3) {
  * @returns {string} bytes32 hex string
  */
 function hashConfig(newConfig, web3, c) {
-  console.log("hashConfig begin =================================");
+  if (newConfig.length === 0)
+    return "0x";
+
   const hashes = newConfig.map((cfg) => {
     const valueHash = web3.utils.keccak256(toHexBytes(cfg.value, web3));
     const encoded = web3.eth.abi.encodeParameters(
@@ -107,14 +109,12 @@ function hash(digestNonce, newCommittee, newConfig, web3) {
 
   const committeeHash = hashCommittee(newCommittee, web3)
   const encodeValues = [c.DIGEST_TYPEHASH, digestNonce, committeeHash, configHash]
-  console.log("encodeValues: ", encodeValues);
   const encoded = web3.eth.abi.encodeParameters(
     ["bytes32", "uint256", "bytes32", "bytes32"],
     encodeValues
   )
-  console.log("encoded end =================================", encoded);
+
   const structHash = web3.utils.keccak256(encoded);
-  console.log("structHash end =================================", structHash);
 
   return toTypedDataHash(c.EIP712_DOMAIN_SEPARATOR, structHash, web3);
 }
