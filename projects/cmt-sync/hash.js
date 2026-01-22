@@ -104,16 +104,17 @@ function toTypedDataHash(domainSeparator, structHash, web3) {
 function hash(digestNonce, newCommittee, newConfig, web3) {
   const c = constants(web3);
   const configHash = hashConfig(newConfig, web3, c)
-  console.log("hashConfig end =================================");
+
   const committeeHash = hashCommittee(newCommittee, web3)
-  console.log("hashCommittee end =================================");
-  const structHash = web3.utils.keccak256(
-    web3.eth.abi.encodeParameters(
-      ["bytes32", "uint256", "bytes32", "bytes32"],
-      [c.DIGEST_TYPEHASH, digestNonce, committeeHash, configHash]
-    )
-  );
-  console.log("structHash end =================================");
+  const encodeValues = [c.DIGEST_TYPEHASH, digestNonce, committeeHash, configHash]
+  console.log("encodeValues: ", encodeValues);
+  const encoded = web3.eth.abi.encodeParameters(
+    ["bytes32", "uint256", "bytes32", "bytes32"],
+    encodeValues
+  )
+  console.log("encoded end =================================", encoded);
+  const structHash = web3.utils.keccak256(encoded);
+  console.log("structHash end =================================", structHash);
 
   return toTypedDataHash(c.EIP712_DOMAIN_SEPARATOR, structHash, web3);
 }
