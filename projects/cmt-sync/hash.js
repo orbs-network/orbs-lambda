@@ -9,11 +9,8 @@ function constants(web3) {
   const { keccak256 } = web3.utils;
 
   const EIP712_DOMAIN_TYPEHASH = keccak256(EIP712_DOMAIN_TYPE);
-  console.log("EIP712_DOMAIN_TYPEHASH: ", EIP712_DOMAIN_TYPEHASH);
   const CONFIG_TYPEHASH = keccak256(CONFIG_TYPE);
-  console.log("CONFIG_TYPEHASH: ", CONFIG_TYPEHASH);
   const DIGEST_TYPEHASH = keccak256(DIGEST_TYPE + CONFIG_TYPE);
-  console.log("DIGEST_TYPEHASH: ", DIGEST_TYPEHASH);
 
   const EIP712_DOMAIN_SEPARATOR = keccak256(
     web3.eth.abi.encodeParameters(
@@ -79,19 +76,16 @@ function hashCommittee(newCommittee, web3) {
  * @param {object} [web3]
  * @returns {string} bytes32 hex string
  */
-function hashConfig(newConfig, web3) {
-
-  const { CONFIG_TYPEHASH } = constants(web3);
-
+function hashConfig(newConfig, web3, c) {
+  console.log("hashConfig begin =================================");
   const hashes = newConfig.map((cfg) => {
     const valueHash = web3.utils.keccak256(toHexBytes(cfg.value, web3));
     const encoded = web3.eth.abi.encodeParameters(
       ["bytes32", "address", "uint8", "bytes32"],
-      [CONFIG_TYPEHASH, cfg.account, cfg.version, valueHash]
+      [c.CONFIG_TYPEHASH, cfg.account, cfg.version, valueHash]
     );
     return web3.utils.keccak256(encoded);
   });
-
   return web3.utils.keccak256(concatHex(hashes));
 }
 
@@ -108,19 +102,20 @@ function toTypedDataHash(domainSeparator, structHash, web3) {
  * @returns {string} bytes32 hex string
  */
 function hash(digestNonce, newCommittee, newConfig, web3) {
-  console.log("hash,  digestNonce: ", digestNonce);
-  console.log("hash newCommittee: ", newCommittee);
-  console.log("hash newConfig: ", newConfig);
-  const { DIGEST_TYPEHASH, EIP712_DOMAIN_SEPARATOR } = constants(web3);
-  console.log("constants DIGEST_TYPEHASH, EIP712_DOMAIN_SEPARATOR: ", DIGEST_TYPEHASH, EIP712_DOMAIN_SEPARATOR);
+  const c = constants(web3);
+  const configHash = hashConfig(newConfig, web3, c)
+  console.log("hashConfig end =================================");
+  const committeeHash = hashCommittee(newCommittee, web3)
+  console.log("hashCommittee end =================================");
   const structHash = web3.utils.keccak256(
     web3.eth.abi.encodeParameters(
       ["bytes32", "uint256", "bytes32", "bytes32"],
-      [DIGEST_TYPEHASH, digestNonce, hashCommittee(newCommittee, web3), hashConfig(newConfig, web3)]
+      [c.DIGEST_TYPEHASH, digestNonce, committeeHash, configHash]
     )
   );
+  console.log("structHash end =================================");
 
-  return toTypedDataHash(EIP712_DOMAIN_SEPARATOR, structHash, web3);
+  return toTypedDataHash(c.EIP712_DOMAIN_SEPARATOR, structHash, web3);
 }
 
 module.exports = {
