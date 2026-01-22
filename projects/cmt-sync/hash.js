@@ -9,8 +9,11 @@ function constants(web3) {
   const { keccak256 } = web3.utils;
 
   const EIP712_DOMAIN_TYPEHASH = keccak256(EIP712_DOMAIN_TYPE);
+  console.log("EIP712_DOMAIN_TYPEHASH: ", EIP712_DOMAIN_TYPEHASH);
   const CONFIG_TYPEHASH = keccak256(CONFIG_TYPE);
+  console.log("CONFIG_TYPEHASH: ", CONFIG_TYPEHASH);
   const DIGEST_TYPEHASH = keccak256(DIGEST_TYPE + CONFIG_TYPE);
+  console.log("DIGEST_TYPEHASH: ", DIGEST_TYPEHASH);
 
   const EIP712_DOMAIN_SEPARATOR = keccak256(
     web3.eth.abi.encodeParameters(
@@ -18,7 +21,7 @@ function constants(web3) {
       [EIP712_DOMAIN_TYPEHASH, keccak256(NAME), keccak256(VERSION)]
     )
   );
-
+  console.log("EIP712_DOMAIN_SEPARATOR: ", EIP712_DOMAIN_SEPARATOR);
   return {
     NAME,
     VERSION,
@@ -104,12 +107,12 @@ function toTypedDataHash(domainSeparator, structHash, web3) {
  * @param {object} [web3]
  * @returns {string} bytes32 hex string
  */
-function hash(digestNonce, newCommittee, newConfig, web3) {
-  console.log("hash digestNonce: ", digestNonce);
+function (digestNonce, newCommittee, newConfig, web3) {
+  console.log("hash,  digestNonce: ", digestNonce);
   console.log("hash newCommittee: ", newCommittee);
   console.log("hash newConfig: ", newConfig);
   const { DIGEST_TYPEHASH, EIP712_DOMAIN_SEPARATOR } = constants(web3);
-
+  console.log("constants DIGEST_TYPEHASH, EIP712_DOMAIN_SEPARATOR: ", DIGEST_TYPEHASH, EIP712_DOMAIN_SEPARATOR);
   const structHash = web3.utils.keccak256(
     web3.eth.abi.encodeParameters(
       ["bytes32", "uint256", "bytes32", "bytes32"],
