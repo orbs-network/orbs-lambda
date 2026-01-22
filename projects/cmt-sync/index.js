@@ -45,7 +45,8 @@ class NodeSignOutputReader {
 }
 
 async function fetchStatus() {
-  const response = await fetch("http://nginx/services/ethereum-reader/status", { method: "GET" })
+  const readerUrl = process.env.READER_URL || "http://nginx/services/ethereum-reader/status"
+  const response = await fetch(readerUrl, { method: "GET" })
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
