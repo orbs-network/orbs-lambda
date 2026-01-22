@@ -107,7 +107,7 @@ function toTypedDataHash(domainSeparator, structHash, web3) {
  * @param {object} [web3]
  * @returns {string} bytes32 hex string
  */
-function (digestNonce, newCommittee, newConfig, web3) {
+function hash(digestNonce, newCommittee, newConfig, web3) {
   console.log("hash,  digestNonce: ", digestNonce);
   console.log("hash newCommittee: ", newCommittee);
   console.log("hash newConfig: ", newConfig);
