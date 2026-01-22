@@ -26,22 +26,22 @@ class NodeSignOutputReader {
     this.buffer = buffer;
   }
 
-  //   getSignature() {
-  //     // Membuffers format: length-prefixed bytes
-  //     // First 4 bytes: length of the signature (uint32, little-endian)
-  //     if (this.buffer.length < 4) {
-  //       throw new Error('Invalid membuffers response: buffer too short');
-  //     }
+  getSignature() {
+    // Membuffers format: length-prefixed bytes
+    // First 4 bytes: length of the signature (uint32, little-endian)
+    if (this.buffer.length < 4) {
+      throw new Error('Invalid membuffers response: buffer too short');
+    }
 
-  //     const signatureLength = this.buffer.readUInt32LE(0);
+    const signatureLength = this.buffer.readUInt32LE(0);
 
-  //     if (this.buffer.length < 4 + signatureLength) {
-  //       throw new Error(`Invalid membuffers response: expected ${signatureLength} bytes, got ${this.buffer.length - 4}`);
-  //     }
+    if (this.buffer.length < 4 + signatureLength) {
+      throw new Error(`Invalid membuffers response: expected ${signatureLength} bytes, got ${this.buffer.length - 4}`);
+    }
 
-  //     // Extract signature (skip length prefix)
-  //     return this.buffer.slice(4, 4 + signatureLength);
-  //   }
+    // Extract signature (skip length prefix)
+    return this.buffer.slice(4, 4 + signatureLength);
+  }
 }
 
 async function fetchStatus() {
@@ -169,10 +169,10 @@ async function ethSign(message, serviceUrl) {
     throw new Error(`Signing failed: ${response.status} ${response.statusText}`);
   }
 
-  // Read the signature from the response
-  return await response.text();
-  //const signature = new NodeSignOutputReader(responseBuffer)//.getSignature();
-  //return signature;
+  // Read the signature from the response (membuffers bytes) and encode as hex
+  const responseBuffer = Buffer.from(await response.arrayBuffer());
+  const signatureBytes = new NodeSignOutputReader(responseBuffer).getSignature();
+  return `0x${signatureBytes.toString('hex')}`;
 }
 
 
