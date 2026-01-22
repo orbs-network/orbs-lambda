@@ -196,6 +196,7 @@ async function getSignedCommittee(args) {
       .filter(addr => addr) // Filter out null addresses
       .map(addr => addr.startsWith('0x') ? addr : `0x${addr}`);
 
+    console.log("committeeAddresses: ", committeeAddresses.length);
 
     // create EIP-712 compatible hash
     const committeeHash = hash(nonce, committeeAddresses, [], web3);

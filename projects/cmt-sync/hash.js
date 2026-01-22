@@ -105,6 +105,9 @@ function toTypedDataHash(domainSeparator, structHash, web3) {
  * @returns {string} bytes32 hex string
  */
 function hash(digestNonce, newCommittee, newConfig, web3) {
+  console.log("hash digestNonce: ", digestNonce);
+  console.log("hash newCommittee: ", newCommittee);
+  console.log("hash newConfig: ", newConfig);
   const { DIGEST_TYPEHASH, EIP712_DOMAIN_SEPARATOR } = constants(web3);
 
   const structHash = web3.utils.keccak256(
