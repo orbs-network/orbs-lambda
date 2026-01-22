@@ -177,14 +177,17 @@ async function ethSign(message, serviceUrl) {
 
 
 async function getSignedCommittee(args) {
-  console.log("getSignedCommittee args:", args)
+
   try {
     const committee = await getCurrentCommittee(args);
     if (committee.error) {
       return { committee: null, signature: null, error: committee.error }
     }
 
-    const nonce = args.get('nonce')
+    const nonce = args?.queryParams?.nonce || 0
+    if (!nonce) {
+      return { committee: null, signature: null, error: "nonce is required" }
+    }
     console.log("nonce: ", nonce);
 
     // Create array of addresses with 0x prefix for return value
