@@ -208,6 +208,7 @@ async function getSignedCommittee(args) {
 
     return {
       committee: committeeAddresses,
+      committeeHash: committeeHash,
       signature: sig,
       error: null
     }
