@@ -149,11 +149,11 @@ async function getCandidates(args) {
 
 async function ethSign(message, serviceUrl) {
   // Convert string to Buffer
-  //const messageBuffer = Buffer.from(message, 'utf8');
+  const messageBuffer = Buffer.from(message, 'utf8');
 
   // Build the request body using NodeSignInputBuilder
-  //const body = new NodeSignInputBuilder(messageBuffer).build();
-  const body = message;
+  const body = new NodeSignInputBuilder(messageBuffer).build();
+  //const body = message;
   console.log("ethSign body: ", body);
 
   // Make the request to /eth-sign endpoint
