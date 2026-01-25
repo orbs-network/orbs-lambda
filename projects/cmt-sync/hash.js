@@ -1,3 +1,6 @@
+const Web3 = require('web3');
+const web3 = new Web3();
+
 const NAME = "OrbsCommitteeSync";
 const VERSION = "0";
 
@@ -5,129 +8,63 @@ const EIP712_DOMAIN_TYPE = "EIP712Domain(string name,string version)";
 const CONFIG_TYPE = "Config(address account,uint8 version,bytes value)";
 const DIGEST_TYPE = "Digest(uint256 nonce,address[] committee,Config[] config)";
 
-function constants(web3) {
-  const { keccak256 } = web3.utils;
+const strip0x = Web3.utils.stripHexPrefix;
+const kUtf8 = (s) => !s || s.length === 0 || s === '0x' ? "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470" : Web3.utils.keccak256(Web3.utils.utf8ToHex(s));
+const k = (s) => !s || s.length === 0 || s === '0x' ? "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470" : Web3.utils.keccak256(s);
 
-  const EIP712_DOMAIN_TYPEHASH = keccak256(EIP712_DOMAIN_TYPE);
-  const CONFIG_TYPEHASH = keccak256(CONFIG_TYPE);
-  const DIGEST_TYPEHASH = keccak256(DIGEST_TYPE + CONFIG_TYPE);
+const pack32 = (xs) => "0x" + xs.map((x) => strip0x(Web3.utils.padLeft(x, 64))).join("");
+const addr32 = (a) => Web3.utils.padLeft(a, 64);
 
-  const EIP712_DOMAIN_SEPARATOR = keccak256(
-    web3.eth.abi.encodeParameters(
-      ["bytes32", "bytes32", "bytes32"],
-      [EIP712_DOMAIN_TYPEHASH, keccak256(NAME), keccak256(VERSION)]
+const EIP712_DOMAIN_SEPARATOR = k(
+  web3.eth.abi.encodeParameters(
+    ["bytes32", "bytes32", "bytes32"],
+    [kUtf8(EIP712_DOMAIN_TYPE), kUtf8(NAME), kUtf8(VERSION)]
+  )
+);
+
+const CONFIG_TYPEHASH = kUtf8(CONFIG_TYPE);
+const DIGEST_TYPEHASH = kUtf8(DIGEST_TYPE + CONFIG_TYPE);
+
+function hashCommittee(committee) {
+  const pk = pack32(committee.map(addr32))
+  return k(pk);
+}
+
+const hashConfig = (cfg) =>
+
+
+  k(
+    pack32(
+      cfg.map((c) =>
+        k(
+          web3.eth.abi.encodeParameters(
+            ["bytes32", "address", "uint8", "bytes32"],
+            [CONFIG_TYPEHASH, c[0], c[1], k(c[2])]
+          )
+        )
+      )
     )
   );
-  console.log("EIP712_DOMAIN_SEPARATOR: ", EIP712_DOMAIN_SEPARATOR);
-  return {
-    NAME,
-    VERSION,
-    EIP712_DOMAIN_TYPE,
-    CONFIG_TYPE,
-    DIGEST_TYPE,
-    EIP712_DOMAIN_TYPEHASH,
-    CONFIG_TYPEHASH,
-    DIGEST_TYPEHASH,
+
+const typed = (domain, struct) => k("0x1901" + strip0x(domain) + strip0x(struct));
+
+const hash = (nonce, committee, cfg) =>
+  typed(
     EIP712_DOMAIN_SEPARATOR,
-  };
-}
-
-function strip0x(hex) {
-  return hex.startsWith("0x") ? hex.slice(2) : hex;
-}
-
-function concatHex(chunks) {
-  if (!chunks.length) return "0x";
-  return `0x${chunks.map(strip0x).join("")}`;
-}
-
-function toHexBytes(value, web3) {
-  if (value == null) return "0x";
-  if (typeof value === "string") {
-    if (web3.utils.isHexStrict(value)) return value;
-    return web3.utils.utf8ToHex(value);
-  }
-  if (Array.isArray(value)) return web3.utils.bytesToHex(value);
-  if (typeof Buffer !== "undefined" && Buffer.isBuffer(value)) return web3.utils.bytesToHex(value);
-  if (value instanceof Uint8Array) return web3.utils.bytesToHex(value);
-
-  throw new TypeError("value must be a hex string, Uint8Array, Buffer, or byte array");
-}
-
-/**
- * Hashes an address array as an EIP-712 array (abi.encodePacked(bytes32[])).
- * @param {string[]} newCommittee
- * @param {object} [web3]
- * @returns {string} bytes32 hex string
- */
-function hashCommittee(newCommittee, web3) {
-  const hashes = newCommittee.map((addr) => {
-    const checksum = web3.utils.toChecksumAddress(addr);
-    return web3.utils.padLeft(checksum, 64);
-  });
-
-  return web3.utils.keccak256(concatHex(hashes));
-}
-
-/**
- * Hashes a Config[] as an EIP-712 array (abi.encodePacked(bytes32[])).
- * Each config item is { account, version, value }.
- * @param {{account: string, version: number|string, value: string|Uint8Array|Buffer|number[] }[]} newConfig
- * @param {object} [web3]
- * @returns {string} bytes32 hex string
- */
-function hashConfig(newConfig, web3, c) {
-  if (newConfig.length === 0)
-    return "0x";
-
-  const hashes = newConfig.map((cfg) => {
-    const valueHash = web3.utils.keccak256(toHexBytes(cfg.value, web3));
-    const encoded = web3.eth.abi.encodeParameters(
-      ["bytes32", "address", "uint8", "bytes32"],
-      [c.CONFIG_TYPEHASH, cfg.account, cfg.version, valueHash]
-    );
-    return web3.utils.keccak256(encoded);
-  });
-  return web3.utils.keccak256(concatHex(hashes));
-}
-
-function toTypedDataHash(domainSeparator, structHash, web3) {
-  return web3.utils.keccak256(`0x1901${strip0x(domainSeparator)}${strip0x(structHash)}`);
-}
-
-/**
- * Returns the EIP-712 digest for a committee/config update.
- * @param {string|number|bigint} digestNonce
- * @param {string[]} newCommittee
- * @param {{account: string, version: number|string, value: string|Uint8Array|Buffer|number[] }[]} newConfig
- * @param {object} [web3]
- * @returns {string} bytes32 hex string
- */
-function hash(digestNonce, newCommittee, newConfig, web3) {
-  const c = constants(web3);
-  const configHash = hashConfig(newConfig, web3, c)
-
-  const committeeHash = hashCommittee(newCommittee, web3)
-  const encodeValues = [c.DIGEST_TYPEHASH, digestNonce, committeeHash, configHash]
-  const encoded = web3.eth.abi.encodeParameters(
-    ["bytes32", "uint256", "bytes32", "bytes32"],
-    encodeValues
-  )
-
-  const structHash = web3.utils.keccak256(encoded);
-
-  return toTypedDataHash(c.EIP712_DOMAIN_SEPARATOR, structHash, web3);
-}
+    k(
+      web3.eth.abi.encodeParameters(
+        ["bytes32", "uint256", "bytes32", "bytes32"],
+        [DIGEST_TYPEHASH, nonce, hashCommittee(committee), hashConfig(cfg)]
+      )
+    )
+  );
 
 module.exports = {
-  NAME,
-  VERSION,
-  EIP712_DOMAIN_TYPE,
-  CONFIG_TYPE,
-  DIGEST_TYPE,
-  constants,
-  hashCommittee,
-  hashConfig,
-  hash,
-  toTypedDataHash,
+  hash
 };
+
+// debug
+// const configElement = ['0x3333333471138EF42aD64829227C6cd8f1F9F47a', 123, '0x3333333471138EF42aD64829227C6cd8f1F9F47a3333333471138EF42aD64829227C6cd8f1F9F47a']
+// const committee = ['0x3333333471138EF42aD64829227C6cd8f1F9F47a', '0x3333333471138EF42aD64829227C6cd8f1F9F47a'.toLowerCase()];
+// const result = hash(123, committee, [configElement, configElement, configElement])
+// console.log("result: ", result);  

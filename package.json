@@ -4,16 +4,16 @@
   "description": "",
   "dependencies": {
     "@orbs-network/ethereum-multicall": "2.2.0",
-    "@orbs-network/pos-analytics-lib": "^0.9.5",
+    "@orbs-network/pos-analytics-lib": "^0.7.4",
+    "bignumber.js": "^9.0.1",
     "cron-parser": "^4.4.0",
     "ethereum-multicall": "^2.10.0",
-    "bignumber.js": "^9.0.1",
     "node-fetch": "^2.6.5",
-    "web3": "^1.5.2"
+    "web3": "^1.10.0"
   },
   "devDependencies": {
-    "dotenv": "^16.0.0",
     "chai": "^4.3.7",
+    "dotenv": "^16.0.0",
     "mocha": "^10.2.0"
   },
   "mocha": {

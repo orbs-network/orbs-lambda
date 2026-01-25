@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 const Web3 = require('web3');
-const web3 = new Web3();
+
 const { hash } = require('./hash');
 console.log('after imports')
 
@@ -199,7 +199,7 @@ async function getSignedCommittee(args) {
     console.log("committeeAddresses: ", committeeAddresses.length);
 
     // create EIP-712 compatible hash
-    const committeeHash = hash(nonce, committeeAddresses, [], web3);
+    const committeeHash = hash(nonce, committeeAddresses, []);
     console.log("getSignedCommittee hash: ", committeeHash);
 
     const sig = await ethSign(committeeHash, "http://signer")
