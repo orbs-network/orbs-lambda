@@ -2,47 +2,12 @@ const fetch = require('node-fetch');
 const Web3 = require('web3');
 
 const { hash } = require('./hash');
+const { Signer } = require('./signer');
+const signer = new Signer("http://signer");
 console.log('after imports')
 
 // Membuffers helper classes for NodeSign serialization
-class NodeSignInputBuilder {
-  constructor(messageBuffer) {
-    this.messageBuffer = messageBuffer;
-  }
 
-  build() {
-    // Membuffers format: length-prefixed bytes
-    // First 4 bytes: length of the message (uint32, little-endian)
-    const length = Buffer.allocUnsafe(4);
-    length.writeUInt32LE(this.messageBuffer.length, 0);
-
-    // Combine length prefix + message
-    return Buffer.concat([length, this.messageBuffer]);
-  }
-}
-
-class NodeSignOutputReader {
-  constructor(buffer) {
-    this.buffer = buffer;
-  }
-
-  getSignature() {
-    // Membuffers format: length-prefixed bytes
-    // First 4 bytes: length of the signature (uint32, little-endian)
-    if (this.buffer.length < 4) {
-      throw new Error('Invalid membuffers response: buffer too short');
-    }
-
-    const signatureLength = this.buffer.readUInt32LE(0);
-
-    if (this.buffer.length < 4 + signatureLength) {
-      throw new Error(`Invalid membuffers response: expected ${signatureLength} bytes, got ${this.buffer.length - 4}`);
-    }
-
-    // Extract signature (skip length prefix)
-    return this.buffer.slice(4, 4 + signatureLength);
-  }
-}
 
 async function fetchStatus() {
   const readerUrl = process.env.READER_URL || "http://nginx/services/ethereum-reader/status"
@@ -147,35 +112,6 @@ async function getCandidates(args) {
   }
 }
 
-async function ethSign(message, serviceUrl) {
-  // Convert string to Buffer
-  const messageBuffer = Buffer.from(message, 'utf8');
-
-  // Build the request body using NodeSignInputBuilder
-  const body = new NodeSignInputBuilder(messageBuffer).build();
-  //const body = message;
-  console.log("ethSign body: ", body);
-
-  // Make the request to /eth-sign endpoint
-  const response = await fetch(`${serviceUrl}/eth-sign`, {
-    method: "POST",
-    body: body,
-    headers: {
-      "Content-Type": "application/membuffers"
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error(`Signing failed: ${response.status} ${response.statusText}`);
-  }
-
-  // Read the signature from the response (membuffers bytes) and encode as hex
-  const responseBuffer = Buffer.from(await response.arrayBuffer());
-  const signatureBytes = new NodeSignOutputReader(responseBuffer).getSignature();
-  return `0x${signatureBytes.toString('hex')}`;
-}
-
-
 async function getSignedCommittee(args) {
 
   try {
@@ -202,7 +138,7 @@ async function getSignedCommittee(args) {
     const committeeHash = hash(nonce, committeeAddresses, []);
     console.log("getSignedCommittee hash: ", committeeHash);
 
-    const sig = await ethSign(committeeHash, "http://signer")
+    const sig = signer.sign(committeeHash)
     console.log("getSignedCommittee signature: ", sig);
 
 
@@ -227,7 +163,12 @@ async function hello(args) {
   return { message: "Hello, world!" }
 }
 
-module.exports.register = function (engine) {
+module.exports.register = async function (engine) {
+  await signer.init();
+  if (!signer.privateKey) {
+    console.error('Signer not initialized');
+    return false;
+  }
   // get current file's directory - but just the last bit of the path  (so we can use it as the projectName)
   const path = require('path')
   const projName = path.basename(path.dirname(__filename))
