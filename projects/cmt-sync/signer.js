@@ -9,6 +9,7 @@ class Signer {
 
   async init() {
     const response = await fetch(`${this.host}/manual`, { method: 'GET' });
+
     if (!response.ok) {
       console.error(`Failed to fetch signer key: ${response.status} ${response.statusText}`);
       return false;
@@ -20,7 +21,9 @@ class Signer {
       return false;
     }
 
-    this.privateKey = data.privateKey;
+    console.log("PK is set")
+    console.log("public key: ", data.addressB)
+    this.privateKey = data.key;
   }
 
   sign(msg) {

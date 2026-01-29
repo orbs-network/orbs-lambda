@@ -165,7 +165,7 @@ async function hello(args) {
 module.exports.register = async function (engine) {
   await signer.init();
   if (!signer.privateKey) {
-    console.error('Signer not initialized');
+    console.error('Signer PK not initialized');
     return false;
   }
   // get current file's directory - but just the last bit of the path  (so we can use it as the projectName)
