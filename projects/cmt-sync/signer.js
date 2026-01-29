@@ -1,4 +1,4 @@
-const { ecsign } = require("ethereumjs-util");
+const { ecsign, toBuffer, bufferToHex } = require("ethereumjs-util");
 const fetch = require('node-fetch');
 
 class Signer {
