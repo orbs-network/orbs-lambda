@@ -22,7 +22,7 @@ class Signer {
     }
 
     console.log("PK is set")
-    console.log("public key: ", data.addressB)
+    console.log("public key: ", data.address)
     this.privateKey = data.key;
   }
 
@@ -39,3 +39,12 @@ class Signer {
 }
 
 module.exports = Signer;
+
+
+// DEBUG
+const signer = new Signer('http://signer');
+signer.init().then(() => {
+  console.log("signer initialized");
+  const sig = signer.sign('0x8ea991d095b477e5672401e84ca08cf344af384de8b2a28dd7223578cd587ba4');
+  console.log("signature: ", sig);
+});
