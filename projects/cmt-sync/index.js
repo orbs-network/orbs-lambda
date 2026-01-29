@@ -1,9 +1,8 @@
 const fetch = require('node-fetch');
-const Web3 = require('web3');
 
 const { hash } = require('./hash');
-const { Signer } = require('./signer');
-const signer = new Signer("http://signer");
+const Signer = require('./signer');
+const signer = new Signer('http://signer');
 console.log('after imports')
 
 // Membuffers helper classes for NodeSign serialization

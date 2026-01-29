@@ -23,14 +23,14 @@ class Signer {
     this.privateKey = data.privateKey;
   }
 
-  sign(message) {
+  sign(msg) {
     if (!this.privateKey) {
       console.error('Signer not initialized');
       return false;
     }
-    const msg = toBuffer(hash32);       // 32-byte hash
+    const msgBuf = toBuffer(hash32);       // 32-byte hash
     const pk = toBuffer(privateKey);    // 32-byte key
-    const { v, r, s } = ecsign(msg, pk);
+    const { v, r, s } = ecsign(msgBuf, pk);
     return bufferToHex(Buffer.concat([r, s, Buffer.from([v])]));
   }
 }
