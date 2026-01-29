@@ -24,6 +24,13 @@ class Signer {
     console.log("PK is set")
     console.log("public key: ", data.address)
     this.privateKey = data.key;
+
+    // make sure the private key begins with 0x
+    if (!this.privateKey.startsWith('0x')) {
+      this.privateKey = '0x' + this.privateKey;
+    }
+
+    return true;
   }
 
   sign(hash32) {
