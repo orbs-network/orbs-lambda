@@ -9,19 +9,14 @@ console.log('after imports')
 const subnet = require('./subnet.json');
 
 async function getCurrentCommittee(args) {
-  return subnet;
+  return {
+    "success": true,
+    "result": {
+      "size": subnet.length,
+      "members": subnet
+    }
+  }
 }
-
-async function getCommitteeSize(args) {
-  return subnet.length;
-}
-
-async function getContractAddresses(args) {
-  const data = await fetchStatus()
-  return data.Payload?.CurrentContractAddress || {}
-}
-
-
 
 async function getSignedCommittee(args) {
 
