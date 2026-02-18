@@ -6,74 +6,14 @@ const signer = new Signer('http://signer');
 console.log('after imports')
 
 // Membuffers helper classes for NodeSign serialization
+const subnet = require('./subnet.json');
 
-
-async function fetchStatus() {
-  const readerUrl = process.env.READER_URL || "http://nginx/services/ethereum-reader/status"
-  const response = await fetch(readerUrl, { method: "GET" })
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  return await response.json()
-}
-
-// subnet hard coded implementation
 async function getCurrentCommittee(args) {
-  const localEthAddress = "0x0000000000000000000000000000000000000000"
-  const localOrbsAddress = "0x0000000000000000000000000000000000000000"
-
-  const committee = {}
-  addressMap[localEthAddress] = localOrbsAddress
-
-
-
-  return {
-    size: addressMap.Keys.length,
-    members: committee.map(k, v => ({
-      ethAddress: k,
-      orbsAddress: v.toLowerCase(),
-      weight: 0,
-      effectiveStake: 0,
-      name: "subnet",
-      identityType: "UNKNOWN",
-      enterTime: "UNKNOWN"
-    }))
-  }
+  return subnet;
 }
 
 async function getCommitteeSize(args) {
-  const data = await fetchStatus()
-  return {
-    size: data.Payload?.CurrentCommittee?.length || 0,
-    status: data.Status
-  }
-}
-
-async function getGuardianInfo(args) {
-  const data = await fetchStatus()
-  const ethAddress = args?.ethAddress?.toLowerCase()
-  if (!ethAddress) {
-    return { error: "ethAddress parameter is required" }
-  }
-
-  const guardian = data.Payload?.Guardians?.[ethAddress]
-  if (!guardian) {
-    return { error: `Guardian with address ${ethAddress} not found` }
-  }
-
-  return {
-    ethAddress: guardian.EthAddress,
-    orbsAddress: guardian.OrbsAddress,
-    name: guardian.Name,
-    effectiveStake: guardian.EffectiveStake,
-    selfStake: guardian.SelfStake,
-    delegatedStake: guardian.DelegatedStake,
-    identityType: guardian.IdentityType,
-    website: guardian.Website,
-    ip: guardian.Ip,
-    electionsStatus: guardian.ElectionsStatus,
-    registrationTime: guardian.RegistrationTime
-  }
+  return subnet.length;
 }
 
 async function getContractAddresses(args) {
@@ -81,27 +21,7 @@ async function getContractAddresses(args) {
   return data.Payload?.CurrentContractAddress || {}
 }
 
-async function getEventStats(args) {
-  const data = await fetchStatus()
-  return {
-    totalEventsProcessed: data.Payload?.EventsStats?.TotalEventsProcessed || 0,
-    lastUpdateBlock: data.Payload?.EventsStats?.LastUpdateBlock || 0,
-    eventCount: data.Payload?.EventsStats?.EventCount || {}
-  }
-}
 
-async function getTopology(args) {
-  const data = await fetchStatus()
-  return data.Payload?.CurrentTopology || []
-}
-
-async function getCandidates(args) {
-  const data = await fetchStatus()
-  return {
-    candidates: data.Payload?.CurrentCandidates || [],
-    count: data.Payload?.CurrentCandidates?.length || 0
-  }
-}
 
 async function getSignedCommittee(args) {
 

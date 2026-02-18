@@ -1,0 +1,11 @@
+[
+  {
+    "ethAddress": "0000000000000000000000000000000000000000",
+    "orbsAddress": "940B3282c497a444517f1A30ACB68840A2377F4A",
+    "weight": 0,
+    "effectiveStake": 0,
+    "name": "subnet-dev-local",
+    "identityType": 1,
+    "enterTime": "UNKNOWN"
+  }
+]
