@@ -8,7 +8,7 @@ console.log('after imports')
 // Membuffers helper classes for NodeSign serialization
 const subnet = require('./subnet.json');
 
-async function getCurrentCommittee(args) {
+function getCurrentCommittee(args) {
   return {
     "success": true,
     "result": {
@@ -19,21 +19,16 @@ async function getCurrentCommittee(args) {
 }
 
 async function getSignedCommittee(args) {
-
   try {
-    const committee = await getCurrentCommittee(args);
-    if (committee.error) {
-      return { committee: null, signature: null, error: committee.error }
-    }
 
     const nonce = args?.queryParams?.nonce || 0
     if (!nonce) {
       return { committee: null, signature: null, error: "nonce is required" }
     }
-    console.log("nonce: ", nonce);
+    console.log("nonce to sign: ", nonce);
 
     // Create array of addresses with 0x prefix for return value
-    const committeeAddresses = committee.members
+    const committeeAddresses = subnet
       .map(member => member.orbsAddress)
       .filter(addr => addr) // Filter out null addresses
       .map(addr => addr.startsWith('0x') ? addr : `0x${addr}`);
