@@ -10,11 +10,8 @@ const subnet = require('./subnet.json');
 
 function getCurrentCommittee(args) {
   return {
-    "success": true,
-    "result": {
-      "size": subnet.length,
-      "members": subnet
-    }
+    "size": subnet.length,
+    "members": subnet
   }
 }
 
