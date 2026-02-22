@@ -5,6 +5,7 @@
     "weight": 0,
     "effectiveStake": 0,
     "name": "subnet-dev-local",
+    "ip": "127.0.0.1",
     "identityType": 1,
     "enterTime": "UNKNOWN"
   }
