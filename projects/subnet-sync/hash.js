@@ -2,10 +2,10 @@ const Web3 = require('web3');
 const web3 = new Web3();
 
 const NAME = "OrbsCommitteeSync";
-const VERSION = "0";
+const VERSION = "1";
 
 const EIP712_DOMAIN_TYPE = "EIP712Domain(string name,string version)";
-const CONFIG_TYPE = "Config(address account,uint8 version,bytes value)";
+const CONFIG_TYPE = "Config(bytes32 key,address account,bytes value)";
 const DIGEST_TYPE = "Digest(uint256 nonce,address[] committee,Config[] config)";
 
 const strip0x = Web3.utils.stripHexPrefix;
@@ -38,7 +38,7 @@ const hashConfig = (cfg) =>
       cfg.map((c) =>
         k(
           web3.eth.abi.encodeParameters(
-            ["bytes32", "address", "uint8", "bytes32"],
+            ["bytes32", "bytes32", "address", "bytes32"],
             [CONFIG_TYPEHASH, c[0], c[1], k(c[2])]
           )
         )
@@ -64,8 +64,11 @@ module.exports = {
 };
 
 // debug
-// const configElement = ['0x3333333471138EF42aD64829227C6cd8f1F9F47a', 123, '0x3333333471138EF42aD64829227C6cd8f1F9F47a3333333471138EF42aD64829227C6cd8f1F9F47a']
+// const configElement = ['0x1234567890123456789012345678901234567890123456789012345678901234', '0x3333333471138EF42aD64829227C6cd8f1F9F47a', '0xABACAD']
 // const committee = ['0x3333333471138EF42aD64829227C6cd8f1F9F47a', '0x3333333471138EF42aD64829227C6cd8f1F9F47a'.toLowerCase()];
-// //const result = hash(1, committee, [configElement, configElement, configElement])
-// const result = hash(1, [], [])
-// console.log("result: ", result);  
+// const result = hash(1, committee, [configElement, configElement, configElement])
+// //const result = hash(1, [], [])
+// console.log("result: ", result);
+
+
+
