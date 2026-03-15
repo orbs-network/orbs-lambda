@@ -1,11 +1,11 @@
 [
   {
     "ethAddress": "0000000000000000000000000000000000000000",
-    "orbsAddress": "940B3282c497a444517f1A30ACB68840A2377F4A",
+    "orbsAddress": "481029997EFfD67A74b48C98D763e2a2147e68A6",
     "weight": 0,
     "effectiveStake": 0,
-    "name": "subnet-dev-local",
-    "ip": "127.0.0.1",
+    "name": "v5-t1-us-e2",
+    "ip": "18.117.196.182",
     "identityType": 1,
     "enterTime": "UNKNOWN"
   }
