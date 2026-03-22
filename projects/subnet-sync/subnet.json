@@ -4,8 +4,28 @@
     "orbsAddress": "481029997EFfD67A74b48C98D763e2a2147e68A6",
     "weight": 0,
     "effectiveStake": 0,
-    "name": "v5-t1-us-e2",
+    "name": "v5-t1",
     "ip": "18.117.196.182",
+    "identityType": 1,
+    "enterTime": "UNKNOWN"
+  },
+  {
+    "ethAddress": "0000000000000000000000000000000000000000",
+    "orbsAddress": "87ed0701e162EB6a73bfd7E0CeF380A7c6a09532",
+    "weight": 0,
+    "effectiveStake": 0,
+    "name": "v5-t2",
+    "ip": "3.145.185.96",
+    "identityType": 1,
+    "enterTime": "UNKNOWN"
+  },
+  {
+    "ethAddress": "0000000000000000000000000000000000000000",
+    "orbsAddress": "A53Fae069a99AfFB15529fea75601f38cea1130c",
+    "weight": 0,
+    "effectiveStake": 0,
+    "name": "v5-t1",
+    "ip": "3.140.241.215",
     "identityType": 1,
     "enterTime": "UNKNOWN"
   }
