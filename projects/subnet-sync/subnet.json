@@ -28,15 +28,5 @@
     "ip": "3.140.241.215",
     "identityType": 1,
     "enterTime": "UNKNOWN"
-  },
-  {
-    "ethAddress": "1000000000000000000000000000000000000000",
-    "orbsAddress": "1010101010101010101010101010101010101010",
-    "weight": 0,
-    "effectiveStake": 0,
-    "name": "v5-t1",
-    "ip": "3.140.241.215",
-    "identityType": 1,
-    "enterTime": "UNKNOWN"
   }
 ]
