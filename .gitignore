@@ -2,6 +2,7 @@
 dist/
 exec/
 data/
+projects/*-dev/*.md 
 
 # Logs
 logs
