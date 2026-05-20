@@ -6,10 +6,26 @@ const signer = new Signer('http://signer');
 console.log('after imports')
 
 const subnet = require('./subnet.json');
+const { json } = require('stream/consumers');
 
+function ABIencodeConfig(config) {
+  return '0x' + Buffer.from(JSON.stringify(config), 'utf8').toString('hex');
+}
 async function getConfig() {
   // TODO: fetch verified TEE pubkeys from VM-Verify, map to config entries
-  return [];
+  const blob = ABIencodeConfig([
+    {
+      "tappid-1-v1": [
+        "0x1234567890abcdef1234567890abcdef12345002"
+      ]
+    }
+  ]);
+  // Shape matches the on-chain Config(bytes32 key, address account, bytes value) tuple.
+  return [[
+    '0x0000000000000000000000000000000000000000000000000000000000000002',
+    '0x0000000000000000000000000000000000000000',
+    blob
+  ]];
 }
 
 async function buildPayload(nonce) {
@@ -92,3 +108,10 @@ module.exports.register = async function (engine) {
   engine.onRpc(getSignedPayload, { projectName: projName, taskName: "getSignedPayload" });
   engine.onRpc(hello, { projectName: projName, taskName: "hello" });
 }
+
+// DEBUG
+// getSignedPayload({ queryParams: { nonce: 1 } }).then(result => {
+//   console.log("Signed payload: ", result);
+// }).catch(err => {
+//   console.error("Error getting signed payload : ", err);
+// })
