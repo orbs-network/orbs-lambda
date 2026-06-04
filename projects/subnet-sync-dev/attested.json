@@ -1,0 +1,18 @@
+[
+  {
+    "tapp_id": "tapp-id-01",
+    "valid": true,
+    "mrenclave": "1151bfa00ec82f404634e263406810688212a291400511dcb3a2bf2540d79166",
+    "mr_signer": "187672f3f6b75ab0c7bc3120af621f2bf3112f5b5a9a7333bf018afa5d700cc6",
+    "ethereum_address": "0x11fefA4cB00d1a25AC38E046F808bE15Ef94F737",
+    "ethereum_address_match": true,
+    "qvl_status": "UpToDate",
+    "report_data_consistent": true,
+    "pubkey_binds_report": true,
+    "expected_mrenclave": "1151bfa00ec82f404634e263406810688212a291400511dcb3a2bf2540d79166",
+    "expected_mrenclave_match": true,
+    "error": null,
+    "getpk_url": "https://oracle01.orbs.network/getPK",
+    "qvl_advisory_ids": []
+  }
+]

@@ -6,21 +6,22 @@ const signer = new Signer('http://signer');
 console.log('after imports')
 
 const subnet = require('./subnet.json');
+const attested = require('./attested.json');
 const { json } = require('stream/consumers');
 
 function ABIencodeConfig(config) {
   return '0x' + Buffer.from(JSON.stringify(config), 'utf8').toString('hex');
 }
-async function getConfig() {
-  // TODO: fetch verified TEE pubkeys from VM-Verify, map to config entries
-  const blob = ABIencodeConfig([
-    {
-      "tappid-1-v1": [
-        "0x1234567890abcdef1234567890abcdef12345002"
-      ]
-    }
-  ]);
-  // Shape matches the on-chain Config(bytes32 key, address account, bytes value) tuple.
+// I/O: fetch the raw config JSON. Will become a VM-Verify /status RPC call;
+// attested.json simulates that payload for dev.
+async function getConfigJson() {
+  return attested;
+}
+
+// Pure, sync, deterministic. Given the raw JSON, returns the on-chain
+// Config(bytes32 key, address account, bytes value)[] tuple form.
+function encodeConfig(json) {
+  const blob = ABIencodeConfig(json);
   return [[
     '0x0000000000000000000000000000000000000000000000000000000000000002',
     '0x0000000000000000000000000000000000000000',
@@ -33,9 +34,13 @@ async function buildPayload(nonce) {
     .map(member => member.orbsAddress)
     .filter(addr => addr) // Filter out null addresses
     .map(addr => addr.startsWith('0x') ? addr : `0x${addr}`);
-  const config = await getConfig();
-  const payloadHash = hash(nonce, committee, config);
-  return { committee, config, payloadHash };
+  const config = await getConfigJson();
+  // Only tapp_id + ethereum_address contribute to the signed digest; the rest of
+  // the attested payload is metadata returned to the client for display only.
+  const configForEncoding = config.map(({ tapp_id, ethereum_address }) => ({ tapp_id, ethereum_address }));
+  const configEncoded = encodeConfig(configForEncoding);
+  const payloadHash = hash(nonce, committee, configEncoded);
+  return { committee, config, configEncoded, payloadHash };
 }
 
 async function getSyncHash(args) {
@@ -57,11 +62,11 @@ async function getSignedPayload(args) {
 
     const nonce = args?.queryParams?.nonce || 0
     if (!nonce) {
-      return { committee: null, config: null, payloadHash: null, signature: null, error: "nonce is required" }
+      return { committee: null, config: null, configEncoded: null, payloadHash: null, signature: null, error: "nonce is required" }
     }
     console.log("nonce to sign: ", nonce);
 
-    const { committee, config, payloadHash } = await buildPayload(nonce);
+    const { committee, config, configEncoded, payloadHash } = await buildPayload(nonce);
     console.log("committee size: ", committee.length);
     console.log("getSignedPayload payloadHash: ", payloadHash);
 
@@ -72,6 +77,7 @@ async function getSignedPayload(args) {
     return {
       committee: committee,
       config: config,
+      configEncoded: configEncoded,
       payloadHash: payloadHash,
       signature: sig,
       error: null
@@ -80,6 +86,7 @@ async function getSignedPayload(args) {
     return {
       committee: null,
       config: null,
+      configEncoded: null,
       payloadHash: null,
       signature: null,
       error: error.message || String(error)
@@ -109,7 +116,7 @@ module.exports.register = async function (engine) {
   engine.onRpc(hello, { projectName: projName, taskName: "hello" });
 }
 
-// DEBUG
+//DEBUG
 // getSignedPayload({ queryParams: { nonce: 1 } }).then(result => {
 //   console.log("Signed payload: ", result);
 // }).catch(err => {
