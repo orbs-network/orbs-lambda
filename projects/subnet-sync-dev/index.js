@@ -9,24 +9,32 @@ const subnet = require('./subnet.json');
 const attested = require('./attested.json');
 const { json } = require('stream/consumers');
 
-function ABIencodeConfig(config) {
-  return '0x' + Buffer.from(JSON.stringify(config), 'utf8').toString('hex');
-}
 // I/O: fetch the raw config JSON. Will become a VM-Verify /status RPC call;
 // attested.json simulates that payload for dev.
 async function getConfigJson() {
   return attested;
 }
 
-// Pure, sync, deterministic. Given the raw JSON, returns the on-chain
-// Config(bytes32 key, address account, bytes value)[] tuple form.
-function encodeConfig(json) {
-  const blob = ABIencodeConfig(json);
-  return [[
-    '0x0000000000000000000000000000000000000000000000000000000000000002',
-    '0x0000000000000000000000000000000000000000',
-    blob
-  ]];
+// uint256.max as 32 raw bytes — the sentinel for "no expiration" until
+// attested.json carries a real valid_until field.
+const VALID_UNTIL_MAX = '0x' + 'ff'.repeat(32);
+
+function tappIdToBytes32(tappId) {
+  const hex = Buffer.from(tappId, 'utf8').toString('hex');
+  if (hex.length > 64) {
+    throw new Error(`tapp_id too long for bytes32 (max 32 UTF-8 bytes): ${tappId}`);
+  }
+  return '0x' + hex.padEnd(64, '0');
+}
+
+// Pure, sync, deterministic. One Config(bytes32 key, address account, bytes value)
+// tuple per attested entry — matches CommitteeSyncConfig.save() shape.
+function encodeConfig(entries) {
+  return entries.map(({ tapp_id, ethereum_address }) => [
+    tappIdToBytes32(tapp_id),
+    ethereum_address,
+    VALID_UNTIL_MAX,
+  ]);
 }
 
 async function buildPayload(nonce) {
