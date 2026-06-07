@@ -37,31 +37,43 @@ function encodeConfig(entries) {
   ]);
 }
 
+const prefix0x = h => (h && !h.startsWith('0x')) ? '0x' + h : h;
+
+function buildNodes() {
+  return subnet
+    .filter(m => m.orbsAddress)
+    .map(m => ({
+      name: m.name,
+      ip: m.ip,
+      port: m.port ?? 80,
+      orbsAddress: prefix0x(m.orbsAddress),
+      ethAddress: prefix0x(m.ethAddress),
+    }));
+}
+
 async function buildPayload(nonce) {
-  const committee = subnet
-    .map(member => member.orbsAddress)
-    .filter(addr => addr) // Filter out null addresses
-    .map(addr => addr.startsWith('0x') ? addr : `0x${addr}`);
+  const nodes = buildNodes();
+  const committee = nodes.map(n => n.orbsAddress);
   const config = await getConfigJson();
   // Only tapp_id + ethereum_address contribute to the signed digest; the rest of
   // the attested payload is metadata returned to the client for display only.
   const configForEncoding = config.map(({ tapp_id, ethereum_address }) => ({ tapp_id, ethereum_address }));
   const configEncoded = encodeConfig(configForEncoding);
   const payloadHash = hash(nonce, committee, configEncoded);
-  return { committee, config, configEncoded, payloadHash };
+  return { committee, nodes, config, configEncoded, payloadHash };
 }
 
 async function getSyncHash(args) {
   try {
     const nonce = args?.queryParams?.nonce || 0
     if (!nonce) {
-      return { payloadHash: null, error: "nonce is required" }
+      return { payloadHash: null, nodes: null, error: "nonce is required" }
     }
-    const { payloadHash } = await buildPayload(nonce);
+    const { payloadHash, nodes } = await buildPayload(nonce);
     console.log("getSyncHash payloadHash: ", payloadHash);
-    return { payloadHash, error: null }
+    return { payloadHash, nodes, error: null }
   } catch (error) {
-    return { payloadHash: null, error: error.message || String(error) }
+    return { payloadHash: null, nodes: null, error: error.message || String(error) }
   }
 }
 
