@@ -5,50 +5,119 @@ const Signer = require('./signer');
 const signer = new Signer('http://signer');
 console.log('after imports')
 
-// Membuffers helper classes for NodeSign serialization
 const subnet = require('./subnet.json');
+const { json } = require('stream/consumers');
 
-function getCurrentCommittee(args) {
-  return {
-    "size": subnet.length,
-    "members": subnet
+const VM_VERIFIER_URL = 'http://localhost/service/vm-verifier/status';
+
+// I/O: fetch the raw config JSON from the VM-Verify sidecar.
+// The `attested` field at the top of the response is the per-tapp attestation list
+// (same shape we previously had statically in attested.json).
+async function getConfigJson() {
+  const response = await fetch(VM_VERIFIER_URL);
+  if (!response.ok) {
+    throw new Error(`vm-verifier HTTP ${response.status} ${response.statusText}`);
+  }
+  const body = await response.json();
+  if (body.Status !== 'OK') {
+    throw new Error(`vm-verifier Status="${body.Status}" Error="${body.Error || ''}"`);
+  }
+  return body.attested || [];
+}
+
+// uint256.max as 32 raw bytes — the sentinel for "no expiration" until
+// attested.json carries a real valid_until field.
+const VALID_UNTIL_MAX = '0x' + 'ff'.repeat(32);
+
+function tappIdToBytes32(tappId) {
+  const hex = Buffer.from(tappId, 'utf8').toString('hex');
+  if (hex.length > 64) {
+    throw new Error(`tapp_id too long for bytes32 (max 32 UTF-8 bytes): ${tappId}`);
+  }
+  return '0x' + hex.padEnd(64, '0');
+}
+
+// Pure, sync, deterministic. One Config(bytes32 key, address account, bytes value)
+// tuple per attested entry — matches CommitteeSyncConfig.save() shape.
+function encodeConfig(entries) {
+  return entries.map(({ tapp_id, ethereum_address }) => [
+    tappIdToBytes32(tapp_id),
+    ethereum_address,
+    VALID_UNTIL_MAX,
+  ]);
+}
+
+const prefix0x = h => (h && !h.startsWith('0x')) ? '0x' + h : h;
+
+function buildNodes() {
+  return subnet
+    .filter(m => m.orbsAddress)
+    .map(m => ({
+      name: m.name,
+      ip: m.ip,
+      port: m.port ?? 80,
+      orbsAddress: prefix0x(m.orbsAddress),
+      ethAddress: prefix0x(m.ethAddress),
+    }));
+}
+
+async function buildPayload(nonce) {
+  const nodes = buildNodes();
+  const committee = nodes.map(n => n.orbsAddress);
+  const config = await getConfigJson();
+  // Only tapp_id + ethereum_address contribute to the signed digest; the rest of
+  // the attested payload is metadata returned to the client for display only.
+  const configForEncoding = config.map(({ tapp_id, ethereum_address }) => ({ tapp_id, ethereum_address }));
+  const configEncoded = encodeConfig(configForEncoding);
+  const payloadHash = hash(nonce, committee, configEncoded);
+  return { committee, nodes, config, configEncoded, payloadHash };
+}
+
+async function getSyncHash(args) {
+  try {
+    const nonce = args?.queryParams?.nonce || 0
+    if (!nonce) {
+      return { payloadHash: null, nodes: null, error: "nonce is required" }
+    }
+    const { payloadHash, nodes } = await buildPayload(nonce);
+    console.log("getSyncHash payloadHash: ", payloadHash);
+    return { payloadHash, nodes, error: null }
+  } catch (error) {
+    return { payloadHash: null, nodes: null, error: error.message || String(error) }
   }
 }
 
-async function getSignedCommittee(args) {
+async function getSignedPayload(args) {
   try {
 
     const nonce = args?.queryParams?.nonce || 0
     if (!nonce) {
-      return { committee: null, signature: null, error: "nonce is required" }
+      return { committee: null, config: null, configEncoded: null, payloadHash: null, signature: null, error: "nonce is required" }
     }
     console.log("nonce to sign: ", nonce);
 
-    // Create array of addresses with 0x prefix for return value
-    const committeeAddresses = subnet
-      .map(member => member.orbsAddress)
-      .filter(addr => addr) // Filter out null addresses
-      .map(addr => addr.startsWith('0x') ? addr : `0x${addr}`);
+    const { committee, config, configEncoded, payloadHash } = await buildPayload(nonce);
+    console.log("committee size: ", committee.length);
+    console.log("getSignedPayload payloadHash: ", payloadHash);
 
-    console.log("committeeAddresses: ", committeeAddresses.length);
-
-    // create EIP-712 compatible hash
-    const committeeHash = hash(nonce, committeeAddresses, []);
-    console.log("getSignedCommittee hash: ", committeeHash);
-
-    const sig = signer.sign(committeeHash)
-    console.log("getSignedCommittee signature: ", sig);
+    const sig = signer.sign(payloadHash)
+    console.log("getSignedPayload signature: ", sig);
 
 
     return {
-      committee: committeeAddresses,
-      committeeHash: committeeHash,
+      committee: committee,
+      config: config,
+      configEncoded: configEncoded,
+      payloadHash: payloadHash,
       signature: sig,
       error: null
     }
   } catch (error) {
     return {
       committee: null,
+      config: null,
+      configEncoded: null,
+      payloadHash: null,
       signature: null,
       error: error.message || String(error)
     }
@@ -72,7 +141,14 @@ module.exports.register = async function (engine) {
   const projName = path.basename(path.dirname(__filename))
   console.log("register project Name: ", projName)
   // projectName has to be the same as the folder name
-  engine.onRpc(getCurrentCommittee, { projectName: projName, taskName: "getCurrentCommittee" });
-  engine.onRpc(getSignedCommittee, { projectName: projName, taskName: "getSignedCommittee" });
+  engine.onRpc(getSyncHash, { projectName: projName, taskName: "getSyncHash" });
+  engine.onRpc(getSignedPayload, { projectName: projName, taskName: "getSignedPayload" });
   engine.onRpc(hello, { projectName: projName, taskName: "hello" });
 }
+
+//DEBUG
+// getSignedPayload({ queryParams: { nonce: 1 } }).then(result => {
+//   console.log("Signed payload: ", result);
+// }).catch(err => {
+//   console.error("Error getting signed payload : ", err);
+// })

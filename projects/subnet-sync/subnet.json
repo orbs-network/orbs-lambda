@@ -24,8 +24,18 @@
     "orbsAddress": "A53Fae069a99AfFB15529fea75601f38cea1130c",
     "weight": 0,
     "effectiveStake": 0,
-    "name": "v5-t1",
+    "name": "v5-t3",
     "ip": "3.140.241.215",
+    "identityType": 1,
+    "enterTime": "UNKNOWN"
+  },
+  {
+    "ethAddress": "4040404040404040404040404040404040404040",
+    "orbsAddress": "1010101010101010101010101010101010101010",
+    "weight": 0,
+    "effectiveStake": 0,
+    "name": "dummy-4",
+    "ip": "2.2.2.2",
     "identityType": 1,
     "enterTime": "UNKNOWN"
   }
