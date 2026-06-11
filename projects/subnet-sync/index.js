@@ -8,7 +8,7 @@ console.log('after imports')
 const subnet = require('./subnet.json');
 const { json } = require('stream/consumers');
 
-const VM_VERIFIER_URL = 'http://localhost/service/vm-verifier/status';
+const VM_VERIFIER_URL = 'http://nginx/service/vm-verifier/status';
 
 // I/O: fetch the raw config JSON from the VM-Verify sidecar.
 // The `attested` field at the top of the response is the per-tapp attestation list
