@@ -5,7 +5,13 @@ export default defineProject({
   tasks: {
     inspect: {
       trigger: { onRpc: {} },
-      handler: (ctx) => ({ project: ctx.project, release: ctx.release, leader: ctx.isLeader, query: ctx.firing.payload.query }),
+      handler: (ctx) => ({
+        version: 2,
+        project: ctx.project,
+        release: ctx.release,
+        leader: ctx.isLeader,
+        query: ctx.firing.payload.query,
+      }),
     },
     heartbeat: {
       trigger: { onInterval: '1m' },
